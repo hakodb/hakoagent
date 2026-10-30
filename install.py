@@ -365,7 +365,7 @@ def do_install(global_mode):
         # Windows .cmd shims so PATH exec works without .exe
         if os.name == "nt":
             for name in BIN_NAMES:
-                (p["bin"] / (name + ".cmd")).write_text('@python "%~dp0%s" %%*\r\n' % name)
+                (p["bin"] / (name + ".cmd")).write_text('@python "%%~dp0%s" %%*\r\n' % name)
         skills, commands = _glob_global_dirs()
         _copy_skills_commands(skills, commands)
         (p["agent"]).mkdir(parents=True, exist_ok=True)
