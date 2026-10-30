@@ -38,6 +38,8 @@ hakoagent.db
 
 # Per-project agent config (generated, not source)
 .claude.json
+# MCP enable output contains machine-local absolute paths (interpreter + bin)
+.opencode/opencode.json
 
 # Native hakodb library — downloaded by install.py from hakodb releases (not source)
 /lib/
