@@ -231,7 +231,7 @@ if [ "$GLOBAL" -eq 1 ]; then
   for d in "${COMMAND_DIRS[@]}"; do mkdir -p "$d"; done
   cp "$SCRIPT_DIR/hakoagent" "$INSTALL_DIR/hakoagent"
   cp "$SCRIPT_DIR/hakoagent-mcp" "$INSTALL_DIR/hakoagent-mcp"
-  cp "$SCRIPT_DIR/hakoagent" "$INSTALL_DIR/hakoagent-cli"
+  cp "$SCRIPT_DIR/hakoagent-cli" "$INSTALL_DIR/hakoagent-cli"
   chmod +x "$INSTALL_DIR/hakoagent"
   chmod +x "$INSTALL_DIR/hakoagent-mcp"
   chmod +x "$INSTALL_DIR/hakoagent-cli"
@@ -281,7 +281,7 @@ else
   if [ "$SCRIPT_DIR" != "$INSTALL_DIR" ]; then
     cp "$SCRIPT_DIR/hakoagent" "$INSTALL_DIR/hakoagent"
     cp "$SCRIPT_DIR/hakoagent-mcp" "$INSTALL_DIR/hakoagent-mcp"
-    cp "$SCRIPT_DIR/hakoagent" "$INSTALL_DIR/hakoagent-cli"
+    cp "$SCRIPT_DIR/hakoagent-cli" "$INSTALL_DIR/hakoagent-cli"
     cp "$SCRIPT_DIR/AGENTS.md" "$INSTALL_DIR/AGENTS.md"
     # Install the hakodb FFI library (required for the embedded engine)
     if [ -d "$SCRIPT_DIR/lib" ]; then

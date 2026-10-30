@@ -107,9 +107,9 @@ resp = json.loads(proc.stdout.readline())
 1. **Run `hakoagent recall <query>` before searching codebase manually** — cache hit avoids re-querying
 2. **Run `hakoagent index` after significant code changes** — keeps dependency graph current.
    **Enforced automatically:** `hakoagent task complete` triggers a quiet re-index, but only if the
-   working tree has uncommitted file changes (detected via `git diff`). Tasks that don't touch code
-   (docs, planning, research) skip re-index. Ad-hoc edits outside a task still require manual
-   `hakoagent index`.
+   working tree has changes (detected via `git status --porcelain`, so untracked files count). Tasks
+   that don't touch code (docs, planning, research) skip re-index. Ad-hoc edits outside a task still
+   require manual `hakoagent index`.
 3. **Run `hakoagent impact <file>` before editing** — see blast radius of changes
 4. Every action is logged to `events` (append-only) — review with `hakoagent events [--limit N]`
 5. Completed tasks auto-extract into skills; duplicates are prevented — skills stay lean
@@ -117,7 +117,13 @@ resp = json.loads(proc.stdout.readline())
 7. Use `bug_scan` to find code quality issues before they become bugs
 8. Use `skill get <skill_id> [--summary]` to retrieve skill context — `--summary` skips markdown body
    to keep agent context lean; full skill is available without the flag when needed.
-9. **MCP server is OFF by default** — `install.sh --global` no longer writes MCP config to
+9. **MCP server is OFF by default** — `install.sh --global` does not write MCP config to
    `~/.claude.json` or `~/.config/opencode/opencode.jsonc`. To enable MCP for a specific project:
-   `hakoagent mcp enable` (creates `.hakoagent/mcp-enabled`), then `hakoagent-mcp` to start the server.
-   Use `hakoagent mcp disable` to turn it off, `hakoagent mcp status` to check.
+   `hakoagent mcp enable` creates `.hakoagent/mcp-enabled` **and** adds
+   `mcp.servers.hakoagent` (OpenCode V2 shape, absolute `hakoagent-mcp` path) to the project's
+   `opencode.json` (or `.opencode/opencode.json`). If only a `.jsonc` exists it prints a snippet
+   instead of rewriting comments. Use `hakoagent mcp disable` to remove both marker and config
+   entry, and `hakoagent mcp status` to check.
+10. **Prune stale revision history** — `hakoagent revision prune [--dry-run]` removes revisions for
+   volatile collections (`code_index`, `context_cache`) that should never have been written.
+   `--all --yes` also deletes durable history; back up `.hakoagent/` first.

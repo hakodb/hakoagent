@@ -1737,5 +1737,40 @@ class TestUS11RemoveGitSync(HakoAgentTestCase):
         self.assertEqual(rc, 1)
 
 
+class TestEntryPoints(HakoAgentTestCase):
+    """The cli/mcp entry points are launchers over one implementation."""
+
+    def _run(self, script_name, args, stdin=b"", timeout=30):
+        import subprocess
+        env = dict(os.environ)
+        for key in ("HAKOAGENT_MODE", "HAKOAGENT_SKIP_AUTO_INIT",
+                    "HAKOAGENT_NO_SESSION"):
+            env.pop(key, None)
+        return subprocess.run(
+            [sys.executable, str(_HAKO_PATH.parent / script_name)] + list(args),
+            cwd=str(self.root), env=env, input=stdin,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout,
+        )
+
+    def test_cli_launcher_runs_help(self):
+        res = self._run("hakoagent-cli", ["help"])
+        self.assertEqual(res.returncode, 0, res.stderr.decode())
+        self.assertIn(b"Usage", res.stdout)
+
+    def test_mcp_launcher_is_stdout_pure(self):
+        req = b'{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n'
+        res = self._run("hakoagent-mcp", [], stdin=req)
+        self.assertEqual(res.returncode, 0, res.stderr.decode())
+        payload = json.loads(res.stdout.decode().splitlines()[0])
+        self.assertEqual(payload["id"], 1)
+        self.assertIn("serverInfo", payload["result"])
+
+    def test_main_binary_defaults_to_mcp(self):
+        req = b'{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n'
+        res = self._run("hakoagent", [], stdin=req)
+        payload = json.loads(res.stdout.decode().splitlines()[0])
+        self.assertEqual(payload["result"]["serverInfo"]["name"], "hakoagent")
+
+
 if __name__ == "__main__":
     unittest.main()

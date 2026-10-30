@@ -14,8 +14,8 @@ cd hakoagent
 
 # Pasang executable dan konfigurasi OpenCode ke PATH
 chmod +x hakoagent install.sh
-./install.sh          # project-local: ./hakoagent + ./AGENTS.md + .opencode/
-./install.sh --global # global: ~/.local/bin/hakoagent + ~/.config/opencode/skills/
+./install.sh          # project-local: ./hakoagent + ./lib/ + ./AGENTS.md + .opencode/
+./install.sh --global # global: ~/.local/bin/hakoagent + lib/ + skills/ + commands/
 export PATH="$HOME/.local/bin:$PATH"
 
 # Verifikasi instalasi
@@ -71,6 +71,10 @@ Ini akan membuat:
 | `hakoagent graph shortest-path` | Jalur terpendek (Dijkstra) | `hakoagent graph shortest-path <from> <to>` |
 | `hakoagent graph dependents` | File yang bergantung pada node | `hakoagent graph dependents <node>` |
 | `hakoagent graph dependents-reverse` | File yang bergantung oleh node | `hakoagent graph dependents-reverse <node>` |
+| `hakoagent revision prune` | Hapus revisi koleksi volatil | `hakoagent revision prune --dry-run` |
+| `hakoagent mcp enable` | Aktifkan MCP untuk proyek ini | `hakoagent mcp enable` |
+| `hakoagent mcp disable` | Nonaktifkan MCP proyek ini | `hakoagent mcp disable` |
+| `hakoagent mcp status` | Cek status MCP proyek | `hakoagent mcp status` |
 
 ---
 
@@ -224,6 +228,37 @@ Anda adalah agen AI dengan akses ke HakoAgent Memory System. Gunakan perintah be
 
 Selalu gunakan hakoagent recall sebelum mencari informasi di codebase untuk mengurangi panggilan endpoint LLM.
 ```
+
+### 6.1 MCP Server (opsional, per proyek)
+
+MCP **mati secara default**. Instalasi global tidak menulis konfigurasi MCP ke `~/.claude.json`
+maupun `~/.config/opencode/opencode.jsonc`.
+
+```bash
+cd /path/to/proyek
+hakoagent mcp enable    # buat .hakoagent/mcp-enabled + tulis mcp.servers.hakoagent
+hakoagent mcp status    # cek status
+hakoagent mcp disable   # hapus marker + entri konfigurasi
+```
+
+`mcp enable` menulis entri OpenCode V2 berikut ke `opencode.json` (atau
+`.opencode/opencode.json`) dengan path absolut:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "hakoagent": {
+        "type": "local",
+        "command": ["/home/user/.local/bin/hakoagent-mcp"]
+      }
+    }
+  }
+}
+```
+
+Jika proyek hanya punya `opencode.jsonc`, perintah akan mencetak snippet untuk ditempel manual
+agar komentar tidak hilang. Setelah enable, restart sesi OpenCode atau jalankan `hakoagent-mcp`.
 
 ---
 
