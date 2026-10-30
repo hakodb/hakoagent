@@ -27,6 +27,8 @@ Commands:
   hakoagent graph delete-project <name>
   hakoagent revision.list <doc_id> <doc_collection>
   hakoagent revision prune [--dry-run] [--all --yes]
+  hakoagent mcp <enable|disable|status|help>
+  hakoagent help
   hakoagent impact <file>
 """
 
@@ -4080,6 +4082,22 @@ def print_help():
     print("  graph shortest-path <from> <to>           Shortest path (Dijkstra)")
     print("  graph dependents <node>                   Files that depend on node")
     print("  graph dependents-reverse <node>           Files node depends on")
+    print("  graph coverage <file_path> [...]          Index coverage report per file")
+    print("  graph search --label <L> --name-pattern <R>  Search graph nodes")
+    print("  graph trace <node> <dir> <depth>          Trace graph with risk labels")
+    print("  graph query \"<cypher-like>\"               Run a graph query")
+    print("  graph detect-changes [--diff-path <p>]    Map git diff to affected symbols")
+    print("  graph get-snippet --qualified-name <n>    Show source snippet by symbol")
+    print("  graph architecture [--tier <tier>]        Architecture overview")
+    print("  graph adr <add|list|get>                  Architecture decision records")
+    print("  graph ingest-traces <trace-file>          Ingest traces")
+    print("  graph list-projects                       List indexed projects")
+    print("  graph delete-project <name>               Delete a project")
+    print("  revision.list <doc_id> <doc_collection>   List revisions for a document")
+    print("  revision prune [--dry-run] [--all --yes]  Prune volatile revision history")
+    print("  mcp <enable|disable|status|help>          Per-project MCP server control")
+    print("  cli <command> [args]                      Force CLI dispatch")
+    print("  help                                      Show this help")
 
 
 def _spawn_background_index():
