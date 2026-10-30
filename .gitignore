@@ -1,0 +1,40 @@
+# Rust
+target/
+debug/
+release/
+*.rs.bk
+*.rlib
+*.d
+*.prof*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Python (contoh integrasi)
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# HakoAgent database
+.hakoagent/
+*.db
+hakoagent.db
+
+# Per-project agent config (generated, not source)
+.claude.json

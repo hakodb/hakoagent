@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "workflows": {
+    "hakoagent": {
+      "name": "Full SDD Cycle",
+      "version": "1.0.1",
+      "description": "Runs specify \u2192 plan \u2192 tasks \u2192 implement with review gates",
+      "source": "bundled",
+      "installed_at": "2026-10-28T16:05:19.919184+00:00",
+      "updated_at": "2026-10-28T16:05:19.919202+00:00"
+    },
+    "speckit": {
+      "name": "Full SDD Cycle",
+      "version": "1.0.1",
+      "description": "Runs specify \u2192 plan \u2192 tasks \u2192 implement with review gates",
+      "source": "bundled",
+      "installed_at": "2026-10-29T08:45:15.315874+00:00",
+      "updated_at": "2026-10-29T08:45:15.315898+00:00"
+    }
+  }
+}

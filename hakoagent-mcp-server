@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# HakoAgent MCP Server — Persistent wrapper
+# Keeps the MCP server alive by maintaining stdin open
+# Usage: ./hakoagent-mcp-server [--db <path>] [--collections all]
+#        ./hakoagent-mcp-server [start|stop|status|restart]
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HAKO_DIR="${HAKO_DIR:-$(pwd)/.hakoagent}"
+PIPE_DIR="${TMPDIR:-/tmp}"
+PIPE_FILE="${PIPE_DIR}/hakoagent-mcp-$$"
+
+# Cleanup on exit
+cleanup() {
+    rm -f "$PIPE_FILE" 2>/dev/null
+    kill "$MCP_PID" 2>/dev/null
+    wait "$MCP_PID" 2>/dev/null
+}
+trap cleanup EXIT
+
+# Create named pipe for stdin
+mkfifo "$PIPE_FILE"
+
+# Start MCP server with stdin from the pipe
+"$SCRIPT_DIR/hakoagent-mcp" < "$PIPE_FILE" &
+MCP_PID=$!
+
+# Keep pipe open for writing (prevents EOF)
+exec 3>"$PIPE_FILE"
+
+# Wait for server to be ready
+sleep 1
+
+# Check if server is running
+if ! kill -0 "$MCP_PID" 2>/dev/null; then
+    echo "ERROR: MCP server failed to start" >&2
+    cat .hakoagent/mcp.log 2>/dev/null || true
+    exit 1
+fi
+
+echo "HakoAgent MCP server running (PID: $MCP_PID)" >&2
+
+# Wait for the server process
+wait "$MCP_PID"
