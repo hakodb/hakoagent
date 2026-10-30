@@ -6,34 +6,34 @@
 
 ## Unknowns Resolution
 
-Tidak ada NEEDS CLARIFICATION yang tersisa. Semua parameter teknis telah diresolusi melalui spec dan clarifikasi sebelumnya:
+No NEEDS CLARIFICATION items remain. All technical parameters were resolved through the spec and prior clarifications:
 
-| Unknown | Resolusi | Sumber |
+| Unknown | Resolution | Source |
 |---------|----------|--------|
-| Mekanisme append-only pada koleksi events | Application-level guard (kode memeriksa event_id sebelum tulis) | Clarification Session 2026-10-29 |
-| Format skill | Markdown (`.md`) di `.hakoagent/skills/` | Constitution Section 4 + Spec FR-005 |
-| Lokasi database HakoDB | `.hakoagent/hakoagent.db` | Constitution Section 3 |
+| Append-only mechanism on the events collection | Application-level guard (code checks event_id before write) | Clarification Session 2026-10-29 |
+| Skill format | Markdown (`.md`) under `.hakoagent/skills/` | Constitution Section 4 + Spec FR-005 |
+| HakoDB database location | `.hakoagent/hakoagent.db` | Constitution Section 3 |
 
 ## Technology Choices
 
 | Decision | Rationale | Alternatives Considered |
 |----------|-----------|------------------------|
-| Rust 1.75+ sebagai bahasa core | HakoDB ditulis Rust, performa tinggi, memory safe, ekosistem mature | Python (lebih lambat untuk embedded DB), Go (cukup baik tapi Rust lebih alami untuk HakoDB FFI) |
-| cbindgen untuk C ABI generation | Standar dalam ekosistem Rust, generate `hakodb.h` otomatis | Tulis C header manual (rentan error, sulit disinkronkan) |
-| HakoDB embedded (`--no-default-features`) | Footprint ringan, tidak perlu server/daemon, cocok untuk in-process agent | SQLite (tidak ada dukungan vektor/graph native), PostgreSQL (butuh server) |
-| Markdown untuk skill | Mudah dibaca manusia/agent, version control friendly, contoh kode dengan syntax highlighting | YAML (tidak cocok untuk contoh kode panjang), JSON (kurang readable) |
-| Application-level append-only guard | Praktis untuk embedded DB, pesan error jelas, tidak memerlukan fitur khusus HakoDB | Database-level constraint (tidak tersedia di HakoDB 0.19), File-system immutable (tidak portabel) |
+| Rust 1.75+ as the core language | HakoDB is written in Rust, high performance, memory safe, mature ecosystem | Python (slower for an embedded DB), Go (adequate but Rust is more natural for HakoDB FFI) |
+| cbindgen for C ABI generation | Standard in the Rust ecosystem, generates `hakodb.h` automatically | Hand-write the C header (error-prone, hard to keep in sync) |
+| HakoDB embedded (`--no-default-features`) | Light footprint, no server/daemon needed, suits an in-process agent | SQLite (no native vector/graph support), PostgreSQL (requires a server) |
+| Markdown for skills | Easy for humans/agents to read, version control friendly, code examples with syntax highlighting | YAML (poor fit for long code examples), JSON (less readable) |
+| Application-level append-only guard | Practical for an embedded DB, clear error messages, requires no special HakoDB feature | Database-level constraint (unavailable in HakoDB 0.19), File-system immutable (not portable) |
 
 ## Integration Patterns
 
-- **Tool calling interface**: Setiap tool diexpose dengan nama `hakoagent.<command>`, parameter terdefinisi, return JSON
-- **FFI/C ABI**: HakoDB shared library via cbindgen, wrapper Rust untuk bahasa host (Go, Python, JS/TS)
-- **CLI**: Binary `hakoagent` dengan subcommands (init, index, recall, skill, task, events, vigilance)
+- **Tool calling interface**: Each tool is exposed with the name `hakoagent.<command>`, defined parameters, JSON return
+- **FFI/C ABI**: HakoDB shared library via cbindgen, Rust wrappers for host languages (Go, Python, JS/TS)
+- **CLI**: `hakoagent` binary with subcommands (init, index, recall, skill, task, events, vigilance)
 
 ## Best Practices
 
-- Semua event ditulis append-only dengan timestamp ISO 8601
-- Skill disimpan sebagai file Markdown terpisah untuk kemudahan editing dan version control
-- Setiap task harus memiliki target dan definition_of_done yang terukur
-- Tidak ada referensi ke tool eksternal (hakoagent) di seluruh kode dan dokumentasi
-- Semua file terkait hakoagent berada di bawah `.hakoagent/` atau root proyek
+- All events are written append-only with ISO 8601 timestamps
+- Skills are stored as separate Markdown files for easy editing and version control
+- Every task must have a measurable target and definition_of_done
+- No references to external tools (hakoagent) anywhere in code or documentation
+- All hakoagent-related files live under `.hakoagent/` or the project root

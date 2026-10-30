@@ -40,6 +40,33 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 BIN_NAMES = ("hakoagent", "hakoagent-mcp", "hakoagent-cli")
 
 
+def _agents_md_src():
+    return SCRIPT_DIR / "assets" / "AGENTS.md"
+
+
+def _agents_md_owned(path):
+    """True when the file was installed by hakoagent (safe to overwrite on
+    uninstall). Pre-existing user AGENTS.md files are never touched."""
+    try:
+        return path.exists() and "HakoAgent" in path.read_text(encoding="utf-8", errors="replace")[:200]
+    except OSError:
+        return False
+
+
+def _copy_agents_md(dst):
+    """Install AGENTS.md without clobbering an existing user file.
+    Never copies onto the source itself (repo-local install is a same walk)."""
+    src = _agents_md_src()
+    if not src.exists() or dst.resolve() == src.resolve():
+        return
+    if dst.exists() and not _agents_md_owned(dst):
+        print("Found existing %s — kept (hakoagent never overwrites it).\n"
+              "Merge agent instructions from %s manually." % (dst, src))
+        return
+    shutil.copyfile(src, dst)
+    print("Installed AGENTS.md to %s" % dst)
+
+
 # ---------------------------------------------------------------------------
 # Native library download (github.com/hakodb/hakodb releases)
 # ---------------------------------------------------------------------------
@@ -275,7 +302,7 @@ def do_uninstall(global_mode, remove_data):
         skills, commands = _glob_global_dirs()
         _copy_skills_commands(skills, commands, uninstall=True)
         agents_md = p["agent"] / "AGENTS.md"
-        if agents_md.exists():
+        if _agents_md_owned(agents_md):
             agents_md.unlink()
             print("Removed: %s" % agents_md)
         _clean_mcp_config()
@@ -291,9 +318,11 @@ def do_uninstall(global_mode, remove_data):
             c.unlink()
             print("Removed: %s" % c)
         a = p["project"] / "AGENTS.md"
-        if a.exists():
+        if _agents_md_owned(a):
             a.unlink()
             print("Removed: %s" % a)
+        elif a.exists():
+            print("Kept: %s (pre-existing AGENTS.md, not installed by hakoagent)" % a)
 
     if remove_data and p["agent"].is_dir():
         shutil.rmtree(p["agent"], ignore_errors=True)
@@ -340,10 +369,10 @@ def do_install(global_mode):
         skills, commands = _glob_global_dirs()
         _copy_skills_commands(skills, commands)
         (p["agent"]).mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(SCRIPT_DIR / "AGENTS.md", p["agent"] / "AGENTS.md")
+        # ~/.hakoagent/AGENTS.md is hakoagent-owned storage: overwrite on upgrade is fine.
+        _copy_agents_md(p["agent"] / "AGENTS.md")
         for dst in bins:
             print("Installed: %s" % dst)
-        print("Installed AGENTS.md to %s" % (p["agent"] / "AGENTS.md"))
         print("Installed skills to OpenCode/Claude skills directories")
         print("Installed /hakoagent command to global command directories")
         print("Native library: %s" % lib)
@@ -351,7 +380,7 @@ def do_install(global_mode):
         _path_hint(p["bin"])
     else:
         if SCRIPT_DIR != p["project"]:
-            for name in BIN_NAMES + ("AGENTS.md",):
+            for name in BIN_NAMES:
                 src = SCRIPT_DIR / name
                 if src.exists():
                     shutil.copyfile(src, p["project"] / name)
@@ -365,6 +394,9 @@ def do_install(global_mode):
                 dst = p["project"] / ".opencode" / "commands" / "hakoagent.md"
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(cmd_src, dst)
+            # Only for external targets: never (re)create AGENTS.md inside
+            # this repository itself — its copy lives in assets/.
+            _copy_agents_md(p["project"] / "AGENTS.md")
         if os.name != "nt":
             for name in BIN_NAMES:
                 f = p["project"] / name

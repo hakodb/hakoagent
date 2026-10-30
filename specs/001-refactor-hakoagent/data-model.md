@@ -8,164 +8,164 @@
 
 ### Event
 
-Tindakan agen yang dicatat secara kronologis di koleksi `events`.
+An agent action recorded chronologically in the `events` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| event_id | string | ID unik event | Harus unik, tidak boleh di-overwrite |
-| timestamp | string (ISO 8601) | Waktu event terjadi | Format ISO 8601 |
-| session_id | string | Referensi ke sesi | Harus sesuai session_id yang valid |
-| actor | string | Pelaku tindakan (contoh: "hakoagent") | Tidak boleh kosong |
-| action | string | Jenis tindakan (contoh: "code_read", "task_complete") | Tidak boleh kosong |
-| target | string | Target tindakan (contoh: file path, collection) | Tidak boleh kosong |
-| change_type | string | Tipe perubahan (contoh: "read", "write", "delete") | Tidak boleh kosong |
-| metadata | JSON | Data tambahan opsional | Boleh kosong |
+| event_id | string | Unique event ID | Must be unique, must not be overwritten |
+| timestamp | string (ISO 8601) | When the event occurred | ISO 8601 format |
+| session_id | string | Reference to a session | Must match a valid session_id |
+| actor | string | Actor performing the action (e.g.: "hakoagent") | Must not be empty |
+| action | string | Type of action (e.g.: "code_read", "task_complete") | Must not be empty |
+| target | string | Target of the action (e.g.: file path, collection) | Must not be empty |
+| change_type | string | Change type (e.g.: "read", "write", "delete") | Must not be empty |
+| metadata | JSON | Optional additional data | May be empty |
 
-**Constraint**: Append-only. event_id tidak dapat di-overwrite. Sistem memeriksa keberadaan event_id sebelum menulis (application-level guard).
+**Constraint**: Append-only. event_id cannot be overwritten. The system checks whether event_id exists before writing (application-level guard).
 
 ### Session
 
-Riwayat sesi agent di koleksi `sessions`.
+Agent session history in the `sessions` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| session_id | string | ID unik sesi | Harus unik |
-| started_at | string (ISO 8601) | Waktu sesi dimulai | Format ISO 8601 |
-| ended_at | string (ISO 8601) | Waktu sesi selesai | Format ISO 8601, boleh null |
-| summary | string | Ringkasan sesi | Boleh kosong |
-| status | string | Status sesi (contoh: "active", "completed") | Tidak boleh kosong |
-| model_used | string | Model LLM yang digunakan | Boleh null |
-| task_ids | array of string | Daftar task_id dalam sesi | Harus berupa array |
+| session_id | string | Unique session ID | Must be unique |
+| started_at | string (ISO 8601) | When the session started | ISO 8601 format |
+| ended_at | string (ISO 8601) | When the session ended | ISO 8601 format, may be null |
+| summary | string | Session summary | May be empty |
+| status | string | Session status (e.g.: "active", "completed") | Must not be empty |
+| model_used | string | LLM model used | May be null |
+| task_ids | array of string | List of task_id within the session | Must be an array |
 
 ### Task
 
-Tugas yang dikerjakan agent di koleksi `tasks`.
+A task the agent works on in the `tasks` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| task_id | string | ID unik tugas | Harus unik |
-| title | string | Judul tugas | Tidak boleh kosong |
-| description | string | Deskripsi tugas | Tidak boleh kosong |
-| target | string | Target tujuan tugas | Tidak boleh kosong (Clear Target) |
-| definition_of_done | string | Kriteria selesai yang terukur | Tidak boleh kosong (Clear Target) |
-| priority | string | Prioritas (P1, P2, P3) | Harus salah satu dari P1/P2/P3 |
-| status | string | Status (todo, in-progress, done, blocked) | Harus salah satu dari nilai yang valid |
-| story_id | string | Referensi ke user story | Boleh null |
-| dependencies | array of string | Daftar task_id yang menjadi dependensi | Harus berupa array |
-| created_at | string (ISO 8601) | Waktu task dibuat | Format ISO 8601 |
-| completed_at | string (ISO 8601) | Waktu task selesai | Format ISO 8601, boleh null |
-| dod_verified | boolean | Apakah DoD telah diverifikasi | Default false |
-| model_used | string | Model LLM yang digunakan | Boleh null |
+| task_id | string | Unique task ID | Must be unique |
+| title | string | Task title | Must not be empty |
+| description | string | Task description | Must not be empty |
+| target | string | Task goal target | Must not be empty (Clear Target) |
+| definition_of_done | string | Measurable completion criteria | Must not be empty (Clear Target) |
+| priority | string | Priority (P1, P2, P3) | Must be one of P1/P2/P3 |
+| status | string | Status (todo, in-progress, done, blocked) | Must be one of the valid values |
+| story_id | string | Reference to a user story | May be null |
+| dependencies | array of string | List of task_id this task depends on | Must be an array |
+| created_at | string (ISO 8601) | When the task was created | ISO 8601 format |
+| completed_at | string (ISO 8601) | When the task was completed | ISO 8601 format, may be null |
+| dod_verified | boolean | Whether the DoD has been verified | Default false |
+| model_used | string | LLM model used | May be null |
 
-**State transitions**: todo → in-progress → done (jika dod_verified=true) / blocked
+**State transitions**: todo → in-progress → done (if dod_verified=true) / blocked
 
 ### Skill
 
-Pola sukses diekstrak dari tugas, disimpan sebagai file Markdown di `.hakoagent/skills/`.
+A success pattern extracted from tasks, stored as a Markdown file under `.hakoagent/skills/`.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| skill_id | string | ID unik skill | Harus unik |
-| name | string | Nama skill | Tidak boleh kosong |
-| description | string | Deskripsi skill | Tidak boleh kosong |
-| context_tags | array of string | Tag konteks untuk pencarian | Harus berupa array |
-| success_count | integer | Jumlah kesuksesan | Default 0 |
-| failure_count | integer | Jumlah kegagalan | Default 0 |
-| last_used | string (ISO 8601) | Waktu terakhir digunakan | Boleh null |
-| example_code | string | Contoh kode | Boleh null |
-| status | string | Status (active, deprecated, archived) | Harus salah satu dari nilai yang valid |
+| skill_id | string | Unique skill ID | Must be unique |
+| name | string | Skill name | Must not be empty |
+| description | string | Skill description | Must not be empty |
+| context_tags | array of string | Context tags for retrieval | Must be an array |
+| success_count | integer | Number of successes | Default 0 |
+| failure_count | integer | Number of failures | Default 0 |
+| last_used | string (ISO 8601) | Last time used | May be null |
+| example_code | string | Code example | May be null |
+| status | string | Status (active, deprecated, archived) | Must be one of the valid values |
 
-**Format**: File Markdown (`.md`), bukan YAML atau JSON.
+**Format**: Markdown file (`.md`), not YAML or JSON.
 
 ### Finding
 
-Temuan codebase di koleksi `findings`.
+A codebase finding in the `findings` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| finding_id | string | ID unik temuan | Harus unik |
-| collection | string | Koleksi tempat temuan ditemukan | Tidak boleh kosong |
-| content | string | Isi temuan | Tidak boleh kosong |
-| finding_type | string | Tipe temuan (bug, pattern, error, note) | Tidak boleh kosong |
-| file | string | File terkait | Boleh null |
-| event_id | string | Referensi ke event asal | Boleh null |
+| finding_id | string | Unique finding ID | Must be unique |
+| collection | string | Collection where the finding was discovered | Must not be empty |
+| content | string | Finding content | Must not be empty |
+| finding_type | string | Finding type (bug, pattern, error, note) | Must not be empty |
+| file | string | Related file | May be null |
+| event_id | string | Reference to the originating event | May be null |
 
 ### Decision
 
-Keputusan arsitektur di koleksi `decisions`.
+An architecture decision in the `decisions` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| decision_id | string | ID unik keputusan | Harus unik |
-| title | string | Judul keputusan | Tidak boleh kosong |
-| rationale | string | Alasan keputusan | Tidak boleh kosong |
-| consequences | string | Konsekuensi keputusan | Tidak boleh kosong |
-| event_id | string | Referensi ke event asal | Boleh null |
-| status | string | Status (active, superseded) | Harus salah satu dari nilai yang valid |
+| decision_id | string | Unique decision ID | Must be unique |
+| title | string | Decision title | Must not be empty |
+| rationale | string | Decision rationale | Must not be empty |
+| consequences | string | Decision consequences | Must not be empty |
+| event_id | string | Reference to the originating event | May be null |
+| status | string | Status (active, superseded) | Must be one of the valid values |
 
 ### CodeIndex
 
-Entri indeks kode di koleksi `code_index`.
+A code index entry in the `code_index` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| entry_id | string | ID unik entri | Harus unik |
-| file_path | string | Path file | Tidak boleh kosong |
-| symbol_name | string | Nama simbol | Tidak boleh kosong |
-| symbol_type | string | Tipe simbol (function, struct, trait, module, dll.) | Tidak boleh kosong |
-| dependencies | array of string | Daftar dependensi | Harus berupa array |
-| line_number | integer | Nomor baris | Boleh null |
+| entry_id | string | Unique entry ID | Must be unique |
+| file_path | string | File path | Must not be empty |
+| symbol_name | string | Symbol name | Must not be empty |
+| symbol_type | string | Symbol type (function, struct, trait, module, etc.) | Must not be empty |
+| dependencies | array of string | List of dependencies | Must be an array |
+| line_number | integer | Line number | May be null |
 
 ### ContextCacheEntry
 
-Entri cache konteks di koleksi `context_cache`.
+A context cache entry in the `context_cache` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| cache_key | string | Kunci cache unik | Harus unik |
-| query | string | Query asli | Tidak boleh kosong |
-| summary | string | Ringkasan hasil pencarian | Tidak boleh kosong |
-| source_documents | array of string | Daftar dokumen sumber | Harus berupa array |
-| created_at | string (ISO 8601) | Waktu entri dibuat | Format ISO 8601 |
-| ttl_seconds | integer | Waktu kadaluwarsa dalam detik | Harus > 0 |
-| hit_count | integer | Jumlah kali diakses | Default 0 |
+| cache_key | string | Unique cache key | Must be unique |
+| query | string | Original query | Must not be empty |
+| summary | string | Summary of search results | Must not be empty |
+| source_documents | array of string | List of source documents | Must be an array |
+| created_at | string (ISO 8601) | When the entry was created | ISO 8601 format |
+| ttl_seconds | integer | Expiration time in seconds | Must be > 0 |
+| hit_count | integer | Number of times accessed | Default 0 |
 
 ### Lesson
 
-Pelajaran dari kegagalan di koleksi `lessons_learned`.
+A lesson from failures in the `lessons_learned` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| lesson_id | string | ID unik pelajaran | Harus unik |
-| title | string | Judul pelajaran | Tidak boleh kosong |
-| description | string | Deskripsi pelajaran | Tidak boleh kosong |
-| failure_context | string | Konteks kegagalan | Tidak boleh kosong |
-| remediation | string | Tindak lanjut perbaikan | Tidak boleh kosong |
-| tags | array of string | Tag pelajaran | Harus berupa array |
-| status | string | Status (active, resolved) | Harus salah satu dari nilai yang valid |
+| lesson_id | string | Unique lesson ID | Must be unique |
+| title | string | Lesson title | Must not be empty |
+| description | string | Lesson description | Must not be empty |
+| failure_context | string | Context of the failure | Must not be empty |
+| remediation | string | Follow-up remediation action | Must not be empty |
+| tags | array of string | Lesson tags | Must be an array |
+| status | string | Status (active, resolved) | Must be one of the valid values |
 
 ## Relationships
 
-- Session 1:N Event (satu sesi dapat memiliki banyak event)
-- Task N:1 Session (satu task terkait satu sesi)
-- Event N:1 Session (satu event terkait satu sesi)
-- Finding N:1 Event (satu finding merujuk satu event asal)
-- Decision N:1 Event (satu decision merujuk satu event asal)
+- Session 1:N Event (one session can have many events)
+- Task N:1 Session (one task relates to one session)
+- Event N:1 Session (one event relates to one session)
+- Finding N:1 Event (a finding refers to one originating event)
+- Decision N:1 Event (a decision refers to one originating event)
 
 ## Validation Rules
 
-1. **Event append-only**: Sebelum menulis event, sistem memeriksa apakah event_id sudah ada. Jika ada, operasi ditolak dengan error.
-2. **Task completeness**: Task tidak dapat ditandai selesai jika `definition_of_done` kosong atau `dod_verified` false.
-3. **Skill uniqueness**: skill_id harus unik dalam direktori `.hakoagent/skills/`.
-4. **Required fields**: Semua field yang ditandai "Tidak boleh kosong" harus diisi saat create.
+1. **Event append-only**: Before writing an event, the system checks whether event_id already exists. If it does, the operation is rejected with an error.
+2. **Task completeness**: A task cannot be marked complete if `definition_of_done` is empty or `dod_verified` is false.
+3. **Skill uniqueness**: skill_id must be unique within the `.hakoagent/skills/` directory.
+4. **Required fields**: All fields marked "Must not be empty" must be filled at create time.
 
 ## State Transitions
 
 | Entity | From | To | Condition |
 |--------|------|-----|-----------|
-| Task | todo | in-progress | Agent mulai bekerja pada task |
-| Task | in-progress | done | Task selesai dan dod_verified=true |
-| Task | in-progress | blocked | Task terhalang oleh dependensi atau masalah |
-| Skill | active | deprecated | Skill tidak lagi direkomendasikan |
-| Skill | deprecated | archived | Skill tidak digunakan dalam jangka waktu tertentu |
-| Skill | active | archived | Skill langsung diarsipkan (tidak relevan lagi) |
+| Task | todo | in-progress | Agent starts working on the task |
+| Task | in-progress | done | Task completed and dod_verified=true |
+| Task | in-progress | blocked | Task blocked by dependencies or issues |
+| Skill | active | deprecated | Skill no longer recommended |
+| Skill | deprecated | archived | Skill unused for a certain period |
+| Skill | active | archived | Skill archived immediately (no longer relevant) |

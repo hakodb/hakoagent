@@ -1,46 +1,46 @@
-# Context Cache - Caching untuk HakoAgent
+# Context Cache - Caching for HakoAgent
 
-**Fitur**: 003-cache-graph-system  
-**Tanggal**: 2026-10-29  
-**Status**: Implementasi  
+**Feature**: 003-cache-graph-system  
+**Date**: 2026-10-29  
+**Status**: Implemented  
 **Status**: Draft
 
 ## Overview
 
-Context Cache menyimpan hasil pencarian konteks (HNSW + FTS) dan rangkuman untuk mengurangi panggilan endpoint LLM. Cache menggunakan TTL (Time To Live) dan LRU eviction untuk manajemen memori.
+Context Cache stores context search results (HNSW + FTS) and summaries to reduce LLM endpoint calls. The cache uses TTL (Time To Live) and LRU eviction for memory management.
 
-## File yang Terlibat
+## Files Involved
 
-- `hakoagent` - Python CLI script (fungsi `cache_put_internal`, `cache_get_internal`, `cache_put`, `cache_get`, `cache_stats`)
-- `.hakoagent/memory/context_cache/` - Penyimpanan file cache (JSON per entri)
-- `lib/libhakodb-x86_64-unknown-linux-glibc2.28-el8.so` - Prebuilt HakoDB shared library (opsional, via FFI)
-- `lib/hakodb.h` - C ABI header (referensi tanda tangan fungsi)
+- `hakoagent` - Python CLI script (functions `cache_put_internal`, `cache_get_internal`, `cache_put`, `cache_get`, `cache_stats`)
+- `.hakoagent/memory/context_cache/` - Cache file storage (JSON per entry)
+- `lib/libhakodb-x86_64-unknown-linux-glibc2.28-el8.so` - Prebuilt HakoDB shared library (optional, via FFI)
+- `lib/hakodb.h` - C ABI header (function signature reference)
 
-## Schema Koleksi `context_cache`
+## `context_cache` Collection Schema
 
-| Field | Tipe | Deskripsi | Validasi |
+| Field | Type | Description | Validation |
 |-------|------|-----------|----------|
-| cache_key | String | Kunci cache unik (hash dari query) | Harus unik |
-| query | String | Query asli yang dicari | Tidak boleh kosong |
-| summary | String | Rangkuman hasil pencarian | Tidak boleh kosong |
-| source_documents | Array<String> | Daftar dokumen sumber yang digunakan | Harus berupa array |
-| created_at | String (ISO 8601) | Waktu entri dibuat | Format ISO 8601 |
-| ttl_seconds | u64 | Waktu kedaluwarsa dalam detik | Harus > 0 |
-| hit_count | u64 | Jumlah kali cache diakses | Default 0 |
+| cache_key | String | Unique cache key (hash of the query) | Must be unique |
+| query | String | The original query being searched | Must not be empty |
+| summary | String | Summary of search results | Must not be empty |
+| source_documents | Array<String> | List of source documents used | Must be an array |
+| created_at | String (ISO 8601) | When the entry was created | ISO 8601 format |
+| ttl_seconds | u64 | Expiration time in seconds | Must be > 0 |
+| hit_count | u64 | Number of times the cache was accessed | Default 0 |
 
 ## State Transitions
 
-| Entity | From | To | Kondisi |
+| Entity | From | To | Condition |
 |--------|------|-----|---------|
-| CacheEntry | created | hit | Cache diakses kembali (hit_count ditambah) |
-| CacheEntry | created | expired | TTL habis, entri tidak valid lagi |
-| CacheEntry | created | evicted | Cache penuh, entri terlama di-hapus (LRU) |
+| CacheEntry | created | hit | Cache accessed again (hit_count incremented) |
+| CacheEntry | created | expired | TTL elapsed, entry no longer valid |
+| CacheEntry | created | evicted | Cache full, oldest entry removed (LRU) |
 
-## Aturan Validasi
+## Validation Rules
 
-1. **Cache key uniqueness**: cache_key harus unik per query. Jika query sama dengan cache yang ada, hit_count ditambah.
-2. **TTL validation**: ttl_seconds harus > 0. Jika TTL habis, entri dianggap expired dan harus di-requery ke endpoint LLM.
-3. **LRU eviction**: Jika cache penuh, entri terlama (least recently used) di-hapus.
+1. **Cache key uniqueness**: cache_key must be unique per query. If the query matches an existing cache entry, hit_count is incremented.
+2. **TTL validation**: ttl_seconds must be > 0. If the TTL elapses, the entry is considered expired and must be re-queried to the LLM endpoint.
+3. **LRU eviction**: If the cache is full, the oldest (least recently used) entry is removed.
 
 ## Endpoint LLM Cache Logic
 
@@ -64,17 +64,17 @@ function retrieve_context(query):
 ## CLI Commands
 
 ### `hakoagent cache stats`
-Menampilkan statistik cache: total hits, total misses, eviction count, cache size.
+Shows cache statistics: total hits, total misses, eviction count, cache size.
 
 ### `hakoagent cache recall <query>`
-Ambil konteks dari cache. Jika cache hit, kembalikan hasil. Jika cache miss atau expired, kirim ke endpoint LLM.
+Retrieve context from the cache. On a cache hit, return the result. On a cache miss or expiry, send to the LLM endpoint.
 
 ## Dependencies
 
 - Python standard library only (`json`, `hashlib`, `uuid`, `time`, `ctypes`)
 - Prebuilt HakoDB shared library (`lib/libhakodb-x86_64-unknown-linux-glibc2.28-el8.so`) via ctypes
 
-## Contoh Penggunaan
+## Usage Example
 
 ```bash
 # Ambil konteks dari cache (atau LLM jika cache miss)

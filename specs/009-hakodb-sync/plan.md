@@ -53,23 +53,23 @@ Add optional hakodb-native synchronization to hakoagent, replacing the git-based
 
 ## Constitution Check
 
-| Prinsip Konstitusi | Status | Catatan |
+| Constitution Principle | Status | Notes |
 |-------------------|--------|---------|
-| Smart Memory | Terpenuhi | Sync extends memory across agents |
-| Anti-Lupa | Terpenuhi | Synced context available across agents |
-| Kronologi & Histori | Terpenuhi | Events + revisions preserved during sync |
-| Consistency | Terpenuhi | Sync config consistent across agents |
-| Cross-Model Consistency | Terpenuhi | Same sync flow for all LLM models |
-| Vigilance | Terpenuhi | Sync status visible, conflicts detectable |
-| Clear Target | Terpenuhi | Sync commands have clear targets |
-| Codebase Fluency | Terpenuhi | Sync affects code_index/code_edges |
-| Context Frugality | Terpenuhi | Synced context reduces redundant LLM calls |
-| Self Skill Improvement | Terpenuhi | Synced skills available to all agents |
-| Python Only | Terpenuhi | ctypes to hakodb .so, no external deps |
-| Real Hakodb FFI | Terpenuhi | ctypes to libhakodb .so sync APIs |
-| Code Quality | Terpenuhi | Clean Python, no bare except |
-| Testing | Terpenuhi | Unit tests for sync functions |
-| Maintainability | Terpenuhi | Docs updated, no stale git references |
+| Smart Memory | Met | Sync extends memory across agents |
+| Anti-Lupa | Met | Synced context available across agents |
+| Kronologi & Histori | Met | Events + revisions preserved during sync |
+| Consistency | Met | Sync config consistent across agents |
+| Cross-Model Consistency | Met | Same sync flow for all LLM models |
+| Vigilance | Met | Sync status visible, conflicts detectable |
+| Clear Target | Met | Sync commands have clear targets |
+| Codebase Fluency | Met | Sync affects code_index/code_edges |
+| Context Frugality | Met | Synced context reduces redundant LLM calls |
+| Self Skill Improvement | Met | Synced skills available to all agents |
+| Python Only | Met | ctypes to hakodb .so, no external deps |
+| Real Hakodb FFI | Met | ctypes to libhakodb .so sync APIs |
+| Code Quality | Met | Clean Python, no bare except |
+| Testing | Met | Unit tests for sync functions |
+| Maintainability | Met | Docs updated, no stale git references |
 
 No violations. Constitution check PASSED.
 
@@ -118,7 +118,7 @@ test_hakoagent.py              # Python stdlib unittest (75+ tests)
 
 ### Unknowns from Technical Context
 
-| Unknown | Status | Resolusi |
+| Unknown | Status | Resolution |
 |---------|--------|----------|
 | `hk_net_syncer_new` signature confirmed vs real .so | Open | Verify `hk_net_syncer_new`, `hk_net_syncer_set_discovery`, `hk_net_syncer_start`, `hk_net_syncer_status` exist in .so |
 | `HK_CloudSync` cloud sync functions | Open | Check if cloud sync functions exist in .so (HK_CloudSync type in header) |
@@ -253,23 +253,23 @@ Return value always in JSON format for harness agent parsing.
 
 ### Re-evaluate Constitution Check (post-design)
 
-| Prinsip Konstitusi | Status Post-Design | Catatan |
+| Constitution Principle | Status Post-Design | Notes |
 |-------------------|-------------------|---------|
-| Smart Memory | Terpenuhi | Sync extends memory across agents |
-| Anti-Lupa | Terpenuhi | Synced context available across agents |
-| Kronologi & Histori | Terpenuhi | Events + revisions preserved |
-| Consistency | Terpenuhi | Sync config consistent |
-| Cross-Model Consistency | Terpenuhi | Same sync flow |
-| Vigilance | Terpenuhi | Sync status visible |
-| Clear Target | Terpenuhi | Clear sync commands |
-| Codebase Fluency | Terpenuhi | Sync affects all collections |
-| Context Frugality | Terpenuhi | Synced context reduces LLM calls |
-| Self Skill Improvement | Terpenuhi | Synced skills available to all agents |
-| Python Only | Terpenuhi | ctypes only, no external deps |
-| Real Hakodb FFI | Terpenuhi | ctypes to libhakodb .so sync APIs |
-| Code Quality | Terpenuhi | Clean Python |
-| Testing | Terpenuhi | Unit tests for sync |
-| Maintainability | Terpenuhi | Git sync removed, docs updated |
+| Smart Memory | Met | Sync extends memory across agents |
+| Anti-Lupa | Met | Synced context available across agents |
+| Kronologi & Histori | Met | Events + revisions preserved |
+| Consistency | Met | Sync config consistent |
+| Cross-Model Consistency | Met | Same sync flow |
+| Vigilance | Met | Sync status visible |
+| Clear Target | Met | Clear sync commands |
+| Codebase Fluency | Met | Sync affects all collections |
+| Context Frugality | Met | Synced context reduces LLM calls |
+| Self Skill Improvement | Met | Synced skills available to all agents |
+| Python Only | Met | ctypes only, no external deps |
+| Real Hakodb FFI | Met | ctypes to libhakodb .so sync APIs |
+| Code Quality | Met | Clean Python |
+| Testing | Met | Unit tests for sync |
+| Maintainability | Met | Git sync removed, docs updated |
 
 No violations. Constitution check PASSED post-design.
 

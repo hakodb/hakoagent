@@ -8,71 +8,71 @@
 
 ### CodeIndexEntry
 
-Entri indeks kode yang disimpan di koleksi `code_index` HakoDB.
+A code index entry stored in the `code_index` collection of HakoDB.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| entry_id | string | ID unik entri | Harus unik |
-| file_path | string | Path file relatif dari root proyek | Tidak boleh kosong |
-| symbol_name | string | Nama simbol (fungsi, class, struct, dll.) | Tidak boleh kosong |
-| symbol_type | string | Tipe simbol (function, struct, trait, module, class, method, dll.) | Tidak boleh kosong |
-| dependensi | array of string | Daftar dependensi yang diimpor/dipakai | Harus berupa array |
-| line_number | integer | Nomor baris definisi simbol | Boleh null |
-| last_indexed_at | string (ISO 8601) | Waktu terakhir file diindex | Format ISO 8601 |
-| file_hash | string | Hash SHA-256 dari isi file | Tidak boleh kosong, unik per file_path |
+| entry_id | string | Unique entry ID | Must be unique |
+| file_path | string | File path relative to the project root | Must not be empty |
+| symbol_name | string | Symbol name (function, class, struct, etc.) | Must not be empty |
+| symbol_type | string | Symbol type (function, struct, trait, module, class, method, etc.) | Must not be empty |
+| dependencies | array of string | List of imported/used dependencies | Must be an array |
+| line_number | integer | Line number of the symbol definition | May be null |
+| last_indexed_at | string (ISO 8601) | Last time the file was indexed | ISO 8601 format |
+| file_hash | string | SHA-256 hash of the file content | Must not be empty, unique per file_path |
 
-**Constraint**: file_hash digunakan untuk mendeteksi perubahan. Jika hash sama, file tidak perlu di-reindex.
+**Constraint**: file_hash is used to detect changes. If the hash is the same, the file does not need re-indexing.
 
 ### FileChange
 
-Catatan perubahan file yang terdeteksi oleh file system watcher.
+A file change record detected by the file system watcher.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| change_id | string | ID unik perubahan | Harus unik |
-| file_path | string | Path file yang berubah | Tidak boleh kosong |
-| change_type | string | Tipe perubahan (created/modified/deleted) | Harus salah satu dari nilai yang valid |
-| timestamp | string (ISO 8601) | Waktu perubahan terdeteksi | Format ISO 8601 |
-| indexed_status | string | Status indexing (indexed/skipped/error) | Harus salah satu dari nilai yang valid |
+| change_id | string | Unique change ID | Must be unique |
+| file_path | string | Path of the changed file | Must not be empty |
+| change_type | string | Change type (created/modified/deleted) | Must be one of the valid values |
+| timestamp | string (ISO 8601) | When the change was detected | ISO 8601 format |
+| indexed_status | string | Indexing status (indexed/skipped/error) | Must be one of the valid values |
 
 **State transitions**: detected → indexed / skipped / error
 
 ### IndexingRun
 
-Catatan sesi indexing yang dilakukan background thread.
+A record of an indexing session performed by the background thread.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| run_id | string | ID unik sesi indexing | Harus unik |
-| started_at | string (ISO 8601) | Waktu indexing dimulai | Format ISO 8601 |
-| ended_at | string (ISO 8601) | Waktu indexing selesai | Format ISO 8601, boleh null |
-| files_processed | integer | Jumlah file yang diproses | Harus >= 0 |
-| files_indexed | integer | Jumlah file yang berhasil diindex | Harus >= 0, <= files_processed |
-| errors | array of string | Daftar error yang terjadi | Harus berupa array |
-| status | string | Status (started/completed/failed) | Harus salah satu dari nilai yang valid |
+| run_id | string | Unique indexing session ID | Must be unique |
+| started_at | string (ISO 8601) | When indexing started | ISO 8601 format |
+| ended_at | string (ISO 8601) | When indexing finished | ISO 8601 format, may be null |
+| files_processed | integer | Number of files processed | Must be >= 0 |
+| files_indexed | integer | Number of files successfully indexed | Must be >= 0, <= files_processed |
+| errors | array of string | List of errors that occurred | Must be an array |
+| status | string | Status (started/completed/failed) | Must be one of the valid values |
 
 **State transitions**: started → completed / failed
 
 ## Relationships
 
-- IndexingRun 1:N FileChange (satu sesi indexing dapat memiliki banyak perubahan file)
-- FileChange N:1 CodeIndexEntry (satu perubahan file dapat menghasilkan/update satu entri code_index)
+- IndexingRun 1:N FileChange (one indexing session can have many file changes)
+- FileChange N:1 CodeIndexEntry (one file change can create/update one code_index entry)
 
 ## Validation Rules
 
-1. **File hash uniqueness**: file_hash harus unik per file_path. Jika file_path sudah ada dengan hash yang sama, tidak perlu di-reindex.
-2. **Change type validity**: change_type harus salah satu dari created/modified/deleted.
-3. **Indexing status validity**: indexed_status harus salah satu dari indexed/skipped/error.
-4. **Required fields**: Semua field yang tidak boleh kosong harus diisi saat create.
+1. **File hash uniqueness**: file_hash must be unique per file_path. If a file_path already exists with the same hash, it does not need re-indexing.
+2. **Change type validity**: change_type must be one of created/modified/deleted.
+3. **Indexing status validity**: indexed_status must be one of indexed/skipped/error.
+4. **Required fields**: All fields that must not be empty must be filled at create time.
 
 ## State Transitions
 
 | Entity | From | To | Condition |
 |--------|------|-----|-----------|
-| IndexingRun | started | completed | Semua file diproses tanpa error fatal |
-| IndexingRun | started | failed | Error fatal mencegah lanjutkan indexing |
-| FileChange | detected | indexed | File berhasil diindex ke code_index |
-| FileChange | detected | skipped | File dilewati (ekstensi tidak didukung, direktori diabaikan, terlalu besar) |
-| FileChange | detected | error | Error saat memproses file |
-| CodeIndexEntry | created | updated | File diubah, hash berbeda |
-| CodeIndexEntry | updated | deleted | File dihapus dari repository |
+| IndexingRun | started | completed | All files processed without fatal errors |
+| IndexingRun | started | failed | A fatal error prevents indexing from continuing |
+| FileChange | detected | indexed | File successfully indexed into code_index |
+| FileChange | detected | skipped | File skipped (unsupported extension, ignored directory, too large) |
+| FileChange | detected | error | Error while processing the file |
+| CodeIndexEntry | created | updated | File changed, hash differs |
+| CodeIndexEntry | updated | deleted | File deleted from the repository |

@@ -38,23 +38,23 @@ Add a lightweight `hakoagent-mcp` executable that runs as a JSON-RPC 2.0 server 
 
 ## Constitution Check
 
-| Prinsip Konstitusi | Status | Catatan |
+| Constitution Principle | Status | Notes |
 |-------------------|--------|---------|
-| Smart Memory | Terpenuhi | MCP server keeps engine loaded across calls |
-| Anti-Lupa | Terpenuhi | Context persists across tool calls in same session |
-| Kronologi & Histori | Terpenuhi | Events + revisions preserved in session |
-| Consistency | Terpenuhi | JSON-RPC 2.0 responses, standard tool names |
-| Cross-Model Consistency | Terpenuhi | Same flow for all LLM models |
-| Vigilance | Terpenuhi | Server lifecycle is deterministic (start → serve → shutdown) |
-| Clear Target | Terpenuhi | Each tool call has clear target and result |
-| Codebase Fluency | Terpenuhi | All graph/code_index tools available |
-| Context Frugality | Terpenuhi | Context persists across calls, reducing re-embedding |
-| Self Skill Improvement | Terpenuhi | Skills persist in same session |
-| Python Only | Terpenuhi | stdlib only, no MCP Python package |
-| Real Hakodb FFI | Terpenuhi | ctypes to libhakodb .so |
-| Code Quality | Terpenuhi | Clean Python, no bare except |
-| Testing | Terpenuhi | Unit tests for MCP server functions |
-| Maintainability | Terpenuhi | Docs updated, no stale references |
+| Smart Memory | Met | MCP server keeps engine loaded across calls |
+| Anti-Lupa | Met | Context persists across tool calls in same session |
+| Kronologi & Histori | Met | Events + revisions preserved in session |
+| Consistency | Met | JSON-RPC 2.0 responses, standard tool names |
+| Cross-Model Consistency | Met | Same flow for all LLM models |
+| Vigilance | Met | Server lifecycle is deterministic (start → serve → shutdown) |
+| Clear Target | Met | Each tool call has clear target and result |
+| Codebase Fluency | Met | All graph/code_index tools available |
+| Context Frugality | Met | Context persists across calls, reducing re-embedding |
+| Self Skill Improvement | Met | Skills persist in same session |
+| Python Only | Met | stdlib only, no MCP Python package |
+| Real Hakodb FFI | Met | ctypes to libhakodb .so |
+| Code Quality | Met | Clean Python, no bare except |
+| Testing | Met | Unit tests for MCP server functions |
+| Maintainability | Met | Docs updated, no stale references |
 
 No violations. Constitution check PASSED.
 
@@ -106,7 +106,7 @@ AGENTS.md                      # Agent-facing instructions
 
 ### Unknowns from Technical Context
 
-| Unknown | Status | Resolusi |
+| Unknown | Status | Resolution |
 |---------|--------|----------|
 | stdio JSON-RPC parsing in Python 3.6 | Open | `sys.stdin.readline()` + `json.loads()` per line |
 | Detecting stdin EOF in Python 3.6 | Open | `sys.stdin.readline()` returns `""` on EOF |

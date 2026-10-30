@@ -217,8 +217,8 @@ python3 test_hakoagent.py
 
 ## References
 
-- Spesifikasi fitur: `spec.md`
-- Rencana implementasi: `plan.md`
-- Kontrak antarmuka: `contracts/hakodb-memory-context-interface.md`
-- Konstitusi: `.specify/memory/constitution.md`
-- Referensi pola MCP: `/home/web/.claude/skills/codebase-memory/SKILL.md` (codebase-memory knowledge graph MCP, adapted to non-MCP embedded hakodb)
+- Feature specification: `spec.md`
+- Implementation plan: `plan.md`
+- Interface contract: `contracts/hakodb-memory-context-interface.md`
+- Constitution: `.specify/memory/constitution.md`
+- MCP pattern reference: `/home/web/.claude/skills/codebase-memory/SKILL.md` (codebase-memory knowledge graph MCP, adapted to non-MCP embedded hakodb)

@@ -1,60 +1,63 @@
 # HakoAgent — Architecture Notes
 
-Studi ringkas atas kode untuk kontributor baru. TL;DR periksa `AGENTS.md` (untuk agent AI)
-dan `INSTALL.md` (untuk manusia).
+A short code study for new contributors. TL;DR: see `assets/AGENTS.md` (for AI agents)
+and `INSTALL.md` (for humans).
 
-## Komponen
+## Components
 
-| File | Isi |
-|------|-----|
-| `hakoagent` | Semua logika: CLI + MCP server, satu file Python 3 stdlib-only (~5.400 baris) |
-| `hakoagent-cli` / `hakoagent-mcp` | Launcher tipis: set `HAKOAGENT_MODE`, pipindahkan `sys.argv`, lalu `runpy.run_path(hakoagent)` |
-| `hakoagent-mcp-server` | Wrapper POSIX opsional (mkfifo) untuk sesi MCP persisten |
-| `install.py` | Installer cross-platform (Python stdlib); mengunduh native lib dari release `hakodb/hakodb` |
-| `test_hakoagent.py` | 92 test (unittest), memuat modul via `exec` dan mengarahkan ke dir `.hakoagent` temporer |
-| `lib/` | Native library hasil unduhan installer (`.dll` Windows, `.so` Linux) — tidak di-commit |
-| `specs/`, `docs/` | Riwayat spesifikasi fitur (spec-kit) |
+| File | Role |
+|------|------|
+| `hakoagent` | All logic: CLI + MCP server, single Python 3 stdlib-only file (~5,400 lines) |
+| `hakoagent-cli` / `hakoagent-mcp` | Thin launchers: set `HAKOAGENT_MODE`, remap `sys.argv`, then `runpy.run_path(hakoagent)` |
+| `hakoagent-mcp-server` | Optional POSIX wrapper (mkfifo) for a persistent MCP session |
+| `install.py` | Cross-platform installer (Python stdlib); downloads the native lib from the hakodb release |
+| `test_hakoagent.py` | 92 tests (unittest); loads the module via `exec` and points it at a temp `.hakoagent` dir |
+| `lib/` | Native library downloaded by the installer (`.dll` Windows, `.so` Linux) — not committed |
+| `specs/`, `docs/` | Historical feature specifications (spec-kit) |
 
-## Mode eksekusi (satu implementasi, tiga pintu)
+## Execution modes (one implementation, three doors)
 
-`main()` membaca `basename(sys.argv[0])` + env `HAKOAGENT_MODE`:
-- `hakoagent` / `hakoagent-mcp` → MCP server default (JSON-RPC di stdin/stdout)
-- `hakoagent-cli` → mode CLI sekali-jalan
+`main()` reads `basename(sys.argv[0])` + the `HAKOAGENT_MODE` env var:
+- `hakoagent` / `hakoagent-mcp` → MCP server by default (JSON-RPC over stdin/stdout)
+- `hakoagent-cli` → one-shot CLI mode
 
-## Engine hakodb (wajib, tanpa fallback)
+## The hakodb engine (required, no fallback)
 
-- `_hakodb_lib_load()` mencari kandidat di `lib/` sesuai `sys.platform`
-  (Windows: `hakodb-*.dll`, Linux: `libhakodb-*.so` dengan preferensi glibc paling tua dulu)
-- Tanpa loadable library → tulis error + `sys.exit(1)` — **tidak ada fallback JSON**.
-- Semua akses data lewat fungsi FFI `hk_*` (via `ctypes`, signature di `lib/hakodb.h`,
-  sumber aslinya proyek `hakodb/hakodb` Rust + cbindgen).
-- Engine satu instance (`_hako_engine`), dibuka pada `HAKO_DIR` (normally `.hakoagent/`,
-  dicari dengan jalan naik dari CWD → script dir → `~/.hakoagent`).
+- `_hakodb_lib_load()` picks candidates from `lib/` by `sys.platform`
+  (Windows: `hakodb-*.dll`; Linux: `libhakodb-*.so`, oldest-glibc build first)
+- No loadable library → error message + `sys.exit(1)` — **no JSON fallback**.
+- All data flows through the `hk_*` FFI functions (via `ctypes`; signatures in `lib/hakodb.h`,
+  upstream source in the `hakodb/hakodb` Rust crate + cbindgen).
+- One engine instance (`_hako_engine`), opened at `HAKO_DIR` (normally `.hakoagent/`,
+  found by walking up from CWD → script dir → `~/.hakoagent`).
 
-## Penyimpanan
+## Storage
 
-Semua di `HAKO_DIR` (`.hakoagent/`): koleksi hakodb (`sessions`, `events`, `code_index`,
-`skills`, `tasks`, dll), direktori `memory/`, `logs/`, `sync/`, marker `mcp-enabled`.
+Everything lives under `HAKO_DIR` (`.hakoagent/`): hakodb collections (`sessions`, `events`,
+`code_index`, `skills`, `tasks`, etc.), `memory/`, `logs/`, `sync/` directories,
+and the `mcp-enabled` marker.
 
-## Perintah utama CLI
+## Main CLI verbs
 
 `init`, `index`, `recall`, `skill`, `task`, `events`, `vigilance`, `impact`, `bug_scan`,
 `team`, `sync`, `cache`, `graph` (traverse/shortest-path/dependents/query/adr/...),
-`revision`, `mcp`. `task complete` lakukan re-index diam bila ada working-tree changes.
-Skill diekstrak dari tugas yang selesai, dedup via `skill.refine`/`skill.troubleshoot`.
+`revision`, `mcp`. `task complete` performs a quiet re-index when the working tree has
+changes. Completed tasks auto-extract into skills, deduplicated via
+`skill.refine` / `skill.troubleshoot`.
 
 ## MCP
 
-- Mati secara default; per-project `hakoagent mcp enable` menulis `mcp.servers.hakoagent`
-  ke `opencode.json` proyek (Windows: `command` diisi `[python, <path hakoagent-mcp>]`).
+- Off by default; per-project `hakoagent mcp enable` writes `mcp.servers.hakoagent`
+  to the project's `opencode.json` (Windows: `command` is `[python, <hakoagent-mcp path>]`).
 - Tool surface: `save_doc`, `load_doc`, `recall`, `cache_*`, `events`, `skill.*`, `task.*`,
-  `sync.*`, `graph.*`, `vigilance`, `bug_scan`, `team.*` (lihat `AGENTS.md` untuk daftar parameter).
-- Saat MCP aktif: `_auto_init` diam + indexing background decision (`initialize` tidak diblok).
+  `sync.*`, `graph.*`, `vigilance`, `bug_scan`, `team.*` (see `assets/AGENTS.md` for the full list).
+- When MCP is enabled: quiet `_auto_init` + background indexing keeps `initialize` responsive.
 
-## Install dengan `install.py`
+## Installing via `install.py`
 
-1. Unduh native lib (SHA256 diverifikasi dari `SHA256SUMS` release) → `lib/`, dipastikan
-   loadable via `ctypes.CDLL`; varian glibc dicoba berurutan saat yang pertama gagal.
-2. Pasang bin (Linux `~/.local/bin`, Windows `%LOCALAPPDATA%\hakoagent\bin` + shim `.cmd`),
-   salin `AGENTS.md`, install skills/commands OpenCode + Claude.
-3. MCP tetap OFF secara default (marka kebijakan), `hakoagent mcp enable` per project.
+1. Download the native lib (SHA256-verified against the release `SHA256SUMS`) into `lib/`,
+   then prove it loads via `ctypes.CDLL`; glibc variants are tried in order when one fails.
+2. Install binaries (Linux: `~/.local/bin`; Windows: `%LOCALAPPDATA%\hakoagent\bin` + `.cmd` shims),
+   copy `AGENTS.md` (from `assets/`, never installed into this repo itself),
+   and deploy OpenCode + Claude skills/commands.
+3. MCP stays OFF by default (policy marker); `hakoagent mcp enable` turns it on per project.

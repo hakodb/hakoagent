@@ -6,107 +6,107 @@
 
 **Status**: Draft
 
-**Input**: User description: "auto codebase indexing tanpa agent manual indexing"
+**Input**: User description: "auto codebase indexing without manual agent indexing"
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Agen tidak perlu memulai indexing secara manual (Priority: P1)
+### User Story 1 - Agent does not need to start indexing manually (Priority: P1)
 
-Sistem secara otomatis mendeteksi perubahan codebase dan menjalankan indexing tanpa perlu agen memanggil perintah `hakoagent index` secara manual. Indexing terjadi secara inkremental setiap kali ada file yang ditambahkan, diubah, atau dihapus.
+The system automatically detects codebase changes and runs indexing without the agent calling `hakoagent index` manually. Indexing happens incrementally whenever files are added, changed, or deleted.
 
-**Why this priority**: Ini adalah inti fitur auto indexing — mengurangi beban agen dan memastikan code_index selalu up-to-date tanpa intervensi manual.
+**Why this priority**: This is the core of the auto indexing feature — it reduces agent burden and keeps code_index always up-to-date without manual intervention.
 
-**Independent Test**: Dapat diuji secara independen dengan memodifikasi file di repository lalu memverifikasi bahwa code_index telah diperbarui secara otomatis tanpa agen memanggil perintah index.
+**Independent Test**: Can be tested independently by modifying a file in the repository and then verifying that code_index has been updated automatically without the agent calling the index command.
 
 **Acceptance Scenarios**:
 
-1. **Given** sistem sudah diinisialisasi, **When** agen membuat file baru di repository, **Then** file baru tersebut secara otomatis diindex dalam code_index tanpa agen memanggil `hakoagent index`
-2. **Given** sistem sudah diinisialisasi, **When** agen mengubah file yang sudah ada, **Then** entri code_index untuk file tersebut diperbarui secara otomatis
-3. **Given** sistem sudah diinisialisasi, **When** agen menghapus file dari repository, **Then** entri code_index untuk file tersebut dihapus secara otomatis
+1. **Given** the system is initialized, **When** the agent creates a new file in the repository, **Then** that new file is automatically indexed into code_index without the agent calling `hakoagent index`
+2. **Given** the system is initialized, **When** the agent modifies an existing file, **Then** the code_index entry for that file is updated automatically
+3. **Given** the system is initialized, **When** the agent deletes a file from the repository, **Then** the code_index entry for that file is removed automatically
 
 ---
 
-### User Story 2 - Indexing inkremental tanpa memproses ulang seluruh codebase (Priority: P2)
+### User Story 2 - Incremental indexing without reprocessing the entire codebase (Priority: P2)
 
-Sistem hanya memproses file yang berubah sejak indexing terakhir, bukan seluruh codebase dari awal. Ini menjaga performa tetap baik meski codebase besar.
+The system only processes files changed since the last indexing, not the whole codebase from scratch. This keeps performance good even for large codebases.
 
-**Why this priority**: Penting untuk skalabilitas — codebase besar tidak boleh menyebabkan indexing lambat setiap kali ada perubahan kecil.
+**Why this priority**: Important for scalability — a large codebase must not cause slow indexing every time there is a small change.
 
-**Independent Test**: Dapat diuji dengan mengukur waktu indexing untuk satu file yang diubah dibandingkan indexing seluruh codebase.
+**Independent Test**: Can be tested by measuring the indexing time for a single changed file compared to indexing the entire codebase.
 
 **Acceptance Scenarios**:
 
-1. **Given** codebase sudah diindex sebelumnya, **When** satu file diubah, **Then** waktu indexing untuk satu file jauh lebih cepat dari re-index seluruh codebase
-2. **Given** banyak file diubah sekaligus, **Then** hanya file-file yang berubah yang diproses, bukan seluruh codebase
+1. **Given** the codebase was indexed previously, **When** one file is changed, **Then** the indexing time for that single file is far faster than re-indexing the whole codebase
+2. **Given** many files are changed at once, **Then** only the changed files are processed, not the whole codebase
 
 ---
 
-### User Story 3 - Agen mendapat notifikasi saat indexing selesai (Priority: P3)
+### User Story 3 - Agent receives a notification when indexing finishes (Priority: P3)
 
-Setiap kali indexing otomatis selesai, agen mendapat notifikasi ringkas tentang apa yang diindex dan apakah ada error.
+Every time automatic indexing finishes, the agent receives a concise notification about what was indexed and whether there were errors.
 
-**Why this priority**: Memberi agen visibilitas ke status code_index tanpa perlu memeriksa secara manual.
+**Why this priority**: Gives the agent visibility into code_index status without manual checking.
 
-**Independent Test**: Dapat diuji dengan memicu perubahan file lalu memverifikasi bahwa notifikasi indexing muncul.
+**Independent Test**: Can be tested by triggering a file change and then verifying that the indexing notification appears.
 
 **Acceptance Scenarios**:
 
-1. **Given** indexing otomatis berjalan, **When** indexing selesai, **Then** agen menerima notifikasi ringkas (jumlah file diindex, status sukses/error)
-2. **Given** indexing gagal pada satu file, **Then** agen mendapat notifikasi error untuk file tersebut tanpa menghentikan indexing file lainnya
+1. **Given** automatic indexing is running, **When** indexing finishes, **Then** the agent receives a concise notification (number of files indexed, success/error status)
+2. **Given** indexing fails on one file, **Then** the agent receives an error notification for that file without other files' indexing being stopped
 
 ---
 
 ### Edge Cases
 
-- File dengan ekstensi yang tidak didukung (bukan source code) → dilewati saat indexing
-- File yang terlalu besar → dilewati atau diindex sebagian
-- Direktori yang harus diabaikan (node_modules, .git, target, dll.) → tidak diindex
-- Koneksi terputus saat indexing berjalan → indexing dilanjutkan dari titik terbaru saat kembali online
-- File dengan karakter khusus dalam nama → tetap diindex dengan aman
+- Files with unsupported extensions (not source code) → skipped during indexing
+- Files that are too large → skipped or partially indexed
+- Directories that must be ignored (node_modules, .git, target, etc.) → not indexed
+- Connection lost while indexing is running → indexing resumes from the latest point when back online
+- Files with special characters in their names → still indexed safely
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: Sistem MUST secara otomatis mendeteksi perubahan file di repository tanpa agen memanggil perintah index secara manual. Saat sesi startup, scanning codebase dijalankan sebagai background thread dalam proses agen yang sama (tidak perlu proses terpisah). Jika database belum ada, scanning dilakukan penuh; jika sudah ada, diverifikasi dan diperbarui hanya file yang berubah.
-- **FR-002**: Sistem MUST melakukan indexing inkremental — hanya memproses file yang berubah sejak indexing terakhir
-- **FR-003**: Sistem MUST menyimpan hasil indexing ke koleksi `code_index` di HakoDB
-- **FR-004**: Sistem MUST mengabaikan direktori dan file yang tidak relevan (node_modules, .git, target, build output, dll.)
-- **FR-005**: Sistem MUST memberi notifikasi kepada agen saat indexing otomatis selesai atau gagal
-- **FR-006**: Sistem MUST menangani file yang dihapus dengan menghapus entri code_index terkait
-- **FR-007**: Sistem MUST menangani file baru dengan membuat entri code_index baru
-- **FR-008**: Sistem MUST menangani file yang diubah dengan memperbarui entri code_index existing
-- **FR-009**: Sistem MUST tidak memiliki referensi ke tool eksternal seperti hakoagent di seluruh kode dan dokumentasi
-- **FR-010**: Sistem MUST menyimpan semua file terkait hakoagent di bawah direktori `.hakoagent/` atau root proyek
+- **FR-001**: The system MUST automatically detect file changes in the repository without the agent calling the index command manually. At session startup, codebase scanning runs as a background thread within the same agent process (no separate process needed). If the database does not exist yet, a full scan is performed; if it does exist, it is verified and only changed files are updated.
+- **FR-002**: The system MUST perform incremental indexing — processing only files changed since the last indexing
+- **FR-003**: The system MUST store indexing results in the `code_index` collection in HakoDB
+- **FR-004**: The system MUST ignore irrelevant directories and files (node_modules, .git, target, build output, etc.)
+- **FR-005**: The system MUST notify the agent when automatic indexing completes or fails
+- **FR-006**: The system MUST handle deleted files by removing their related code_index entries
+- **FR-007**: The system MUST handle new files by creating new code_index entries
+- **FR-008**: The system MUST handle modified files by updating their existing code_index entries
+- **FR-009**: The system MUST contain no references to external tools such as hakoagent in any code or documentation
+- **FR-010**: The system MUST store all hakoagent-related files under the `.hakoagent/` directory or the project root
 
 ### Key Entities *(include if feature involves data)*
 
-- **CodeIndexEntry**: Entri indeks kode dengan entry_id, file_path, symbol_name, symbol_type, dependensi, line_number, last_indexed_at, file_hash
-- **FileChange**: Catatan perubahan file dengan change_id, file_path, change_type (created/modified/deleted), timestamp, indexed_status
-- **IndexingRun**: Catatan sesi indexing dengan run_id, started_at, ended_at, files_processed, files_indexed, errors, status
+- **CodeIndexEntry**: A code index entry with entry_id, file_path, symbol_name, symbol_type, dependencies, line_number, last_indexed_at, file_hash
+- **FileChange**: A file change record with change_id, file_path, change_type (created/modified/deleted), timestamp, indexed_status
+- **IndexingRun**: An indexing session record with run_id, started_at, ended_at, files_processed, files_indexed, errors, status
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Agen tidak perlu memanggil `hakoagent index` secara manual untuk menjaga code_index up-to-date
-- **SC-002**: Waktu indexing inkremental untuk satu file yang diubah < 5 detik
-- **SC-003**: 100% file source code yang relevan terindex dalam code_index
-- **SC-004**: 0 entri code_index untuk file yang telah dihapus dari repository
-- **SC-005**: Agen menerima notifikasi setelah setiap sesi indexing otomatis selesai
-- **SC-006**: 0 referensi ke "hakoagent" ditemukan di seluruh file sumber, dokumentasi, dan konfigurasi proyek
+- **SC-001**: The agent does not need to call `hakoagent index` manually to keep code_index up-to-date
+- **SC-002**: Incremental indexing time for one changed file < 5 seconds
+- **SC-003**: 100% of relevant source code files are indexed in code_index
+- **SC-004**: 0 code_index entries for files deleted from the repository
+- **SC-005**: The agent receives a notification after every automatic indexing session completes
+- **SC-006**: 0 references to "hakoagent" found across all source files, documentation, and project configuration
 
 ## Assumptions
 
-- File system watcher tersedia di platform target (Linux, macOS, Windows)
-- Agen memiliki izin untuk membaca file di repository
-- Database HakoDB sudah diinisialisasi sebelum indexing otomatis berjalan
-- Format file yang didukung adalah source code (Rust, Python, JavaScript, TypeScript, Go, dll.)
+- A file system watcher is available on the target platforms (Linux, macOS, Windows)
+- The agent has permission to read files in the repository
+- The HakoDB database is initialized before automatic indexing runs
+- Supported file formats are source code (Rust, Python, JavaScript, TypeScript, Go, etc.)
 
 ## Clarifications
 
 ### Session 2026-10-29
 
-- Q: Saat sesi startup, apakah scanning codebase dijalankan sebagai proses terpisah di background, atau sebagai thread dalam proses agen yang sama? → A: Background thread dalam proses agen yang sama
+- Q: At session startup, is codebase scanning run as a separate background process, or as a thread within the same agent process? → A: Background thread within the same agent process
 
 ---

@@ -35,7 +35,7 @@
 - [X] T006 Verify `hakoagent-core/src/lib.rs` crate entry point with module declarations including indexer
 - [X] T007 Verify `hakoagent-core/src/binding/` C ABI / FFI wrapper (HK_Engine, HK_Doc, HK_Query, HK_Batch, HK_Transaction, HK_Watch, HK_ResultSet handles)
 - [X] T008 Verify `hakoagent-core/src/memory/mod.rs` module declaration including code_index collection
-- [X] T009 [P] Verify `hakoagent-core/src/memory/code_index.rs` — CodeIndexEntry struct with entry_id, file_path, symbol_name, symbol_type, dependensi, line_number, last_indexed_at, file_hash
+- [X] T009 [P] Verify `hakoagent-core/src/memory/code_index.rs` — CodeIndexEntry struct with entry_id, file_path, symbol_name, symbol_type, dependencies, line_number, last_indexed_at, file_hash
 - [X] T010 [P] Verify `hakoagent-core/src/memory/tasks.rs` — Task struct with target + definition_of_done (FR-006)
 - [X] T011 [P] Verify `hakoagent-core/src/planner/mod.rs` module declaration
 - [X] T012 [P] Verify `hakoagent-core/src/planner/task.rs` — Task struct with target + DoD validation
@@ -46,11 +46,11 @@
 
 ---
 
-## Phase 3: User Story 1 - Auto Indexing tanpa Agent Manual (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Auto Indexing without Manual Agent (Priority: P1) 🎯 MVP
 
-**Goal**: Agen tidak perlu memulai indexing secara manual. Sistem secara otomatis mendeteksi perubahan codebase dan menjalankan indexing sebagai background thread saat startup.
+**Goal**: The agent does not need to start indexing manually. The system automatically detects codebase changes and runs indexing as a background thread at startup.
 
-**Independent Test**: Dapat diuji secara independen dengan memodifikasi file di repository lalu memverifikasi bahwa code_index telah diperbarui secara otomatis tanpa agen memanggil perintah `hakoagent index`.
+**Independent Test**: Can be tested independently by modifying a file in the repository and then verifying that code_index has been updated automatically without the agent calling `hakoagent index`.
 
 ### Implementation for User Story 1
 
@@ -68,11 +68,11 @@
 
 ---
 
-## Phase 4: User Story 2 - Indexing Inkremental (Priority: P2)
+## Phase 4: User Story 2 - Incremental Indexing (Priority: P2)
 
-**Goal**: Sistem hanya memproses file yang berubah sejak indexing terakhir, bukan seluruh codebase dari awal.
+**Goal**: The system only processes files changed since the last indexing, not the whole codebase from scratch.
 
-**Independent Test**: Dapat diuji dengan mengukur waktu indexing untuk satu file yang diubah dibandingkan indexing seluruh codebase.
+**Independent Test**: Can be tested by measuring the indexing time for a single changed file compared to indexing the entire codebase.
 
 ### Implementation for User Story 2
 
@@ -90,15 +90,15 @@
 
 ---
 
-## Phase 5: User Story 3 - Notifikasi Indexing Selesai (Priority: P3)
+## Phase 5: User Story 3 - Indexing Completion Notification (Priority: P3)
 
-**Goal**: Setiap kali indexing otomatis selesai, agen mendapat notifikasi ringkas tentang apa yang diindex dan apakah ada error.
+**Goal**: Every time automatic indexing finishes, the agent receives a concise notification about what was indexed and whether there were errors.
 
-**Independent Test**: Dapat diuji dengan memicu perubahan file lalu memverifikasi bahwa notifikasi indexing muncul.
+**Independent Test**: Can be tested by triggering a file change and then verifying that the indexing notification appears.
 
 ### Implementation for User Story 3
 
-- [X] T033 [US3] Implement notification mechanism: after indexing run completes, emit summary event to agen (FR-005)
+- [X] T033 [US3] Implement notification mechanism: after indexing run completes, emit summary event to the agent (FR-005)
 - [X] T034 [US3] Implement notification content: files_processed, files_indexed, errors, status (FR-005)
 - [X] T035 [US3] Implement error handling: single file error does not stop indexing of other files (FR-005)
 - [X] T036 [US3] Implement `cli/src/main.rs` `hakoagent events` — view indexing events (FR-005)
@@ -127,7 +127,7 @@
 - [X] T045 [US2] Implement IndexingRun entity: run_id, started_at, ended_at, files_processed, files_indexed, errors, status (FR-002) (missing, MEDIUM)
 - [X] T046 [US2] Implement FileChange entity: change_id, file_path, change_type, timestamp, indexed_status (FR-002) (missing, MEDIUM)
 - [ ] T047 [US2] Integration test: change one file → only that file reindexed → time < 5 seconds (SC-002) (partial, MEDIUM)
-- [ ] T048 [US3] Implement formal notification mechanism: summary event to agen after indexing completes (FR-005, SC-005) (partial, LOW)
+- [ ] T048 [US3] Implement formal notification mechanism: summary event to the agent after indexing completes (FR-005, SC-005) (partial, LOW)
 - [ ] T049 [US1] Additional unit tests for indexer modules: scanner, watcher, auto_indexer (T041) (missing, LOW)
 - [ ] T050 [US1] Security hardening: verify file access permissions, no sensitive files indexed (T042) (missing, LOW)
 - [ ] T051 [US1] Run `quickstart.md` validation (Test 1–5 pass) (T043) (missing, LOW)
@@ -208,11 +208,11 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
-- Constitution compliance: every task must have target + DoD; every action logged to `events` (append-only); no hakoagent references; all files under `.hakoagent/` or root proyek
+- Constitution compliance: every task must have target + DoD; every action logged to `events` (append-only); no hakoagent references; all files under `.hakoagent/` or the project root
 
 ---
 
-**Tasks siap untuk diimplementasikan. Lanjut ke `/hakoagent-implement`.**
+**Tasks ready for implementation. Proceed to `/hakoagent-implement`.**
 
 ---
 

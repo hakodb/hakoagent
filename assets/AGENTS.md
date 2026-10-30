@@ -127,3 +127,25 @@ resp = json.loads(proc.stdout.readline())
 10. **Prune stale revision history** — `hakoagent revision prune [--dry-run]` removes revisions for
    volatile collections (`code_index`, `context_cache`) that should never have been written.
    `--all --yes` also deletes durable history; back up `.hakoagent/` first.
+
+## Context and request efficiency (org standard)
+
+The point of hakoagent is to spend fewer tokens and fewer LLM round-trips, not more.
+Handle token and context budgets through hakoagent instead of stuffing the transcript:
+
+- **Recall before you search.** `hakoagent recall <query>` hits the local context cache and
+  code index first; a hit avoids both an LLM request and a manual codebase scan.
+- **Cache expensive findings.** `hakoagent cache put <query> <summary> [ttl]` stores the
+  distilled answer so a repeat question costs one local call, zero LLM calls.
+- **Batch, then ask the DB once.** Chain related reads into a single command
+  (`hakoagent graph coverage <files...>`, `task list`, `events --limit N`) instead of N turns;
+  fire independent shell calls in parallel where needed.
+- **Serve skills, not file reads.** `hakoagent skill get <id> --summary` keeps context lean —
+  fetch the full skill body only when the summary is not enough.
+- **Index after real changes only.** `hakoagent index` keeps the dependency graph
+  authoritative; a new graph question is answered locally instead of re-scanning source.
+- **One targeted check while iterating; the full suite once at the end.**
+- **Log proof, not noise.** hakoagent events are append-only — treat them as the durable
+  trail for decisions; keep exact ids, commands, and error text, and let the DB hold it.
+- **Re-read before editing.** If context was summarized away, `recall`/`graph get-snippet`
+  is cheaper than a fresh full-file read.

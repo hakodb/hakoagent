@@ -22,29 +22,29 @@ HakoAgent currently uses JSON file storage under `.hakoagent/memory/` with TF-ID
 ## 3. User Stories
 
 ### US1: Vector Semantic Search (P1)
-Agen dapat mencari konteks dengan arti semantik, bukan hanya kata kunci eksak. Query "error handling" harus menemukan kode yang menggunakan `try/catch` bahkan kata "error" tidak muncul.
+The agent can search for context by meaning, not just exact keywords. A query for "error handling" must find code that uses `try/catch` even when the word "error" does not appear.
 
 **Independent Test**: Query "error handling" returns code with `try/catch` blocks even when word "error" doesn't appear.
 
 ### US2: Graph Traversal with Typed Edges (P1)
-Agen dapat menelusuri dependensi dengan tipe relasi yang bervariasi: `imports`, `calls`, `data_flows`, `test_of`, `depends_on`.
+The agent can traverse dependencies with varying relationship types: `imports`, `calls`, `data_flows`, `test_of`, `depends_on`.
 
 **Independent Test**: Query "what does this function call?" returns only direct function calls, not all dependents.
 
 ### US3: Graph Shortest Path with Weighted Edges (P1)
-Agen dapat mencari jalur terpendek antar dua simbol dengan bobot edge yang bervariasi (misalnya: `calls` weight=1, `imports` weight=2, `data_flows` weight=5).
+The agent can find the shortest path between two symbols with varying edge weights (e.g., `calls` weight=1, `imports` weight=2, `data_flows` weight=5).
 
 **Independent Test**: Dijkstra returns path with minimum total weight, not just fewest hops.
 
 ### US4: Multi-Agent Team Context (P2)
-Beberapa agen bisa melihat tugas, skill, dan events yang dibuat oleh agen lain dalam tim yang sama.
+Multiple agents can see tasks, skills, and events created by other agents in the same team.
 
-**Independent Test**: Agen B dapat melihat skill yang dibuat oleh agen A setelah auto-sync.
+**Independent Test**: Agent B can see skills created by agent A after auto-sync.
 
 ### US5: Append-Only Event Log with Watch (P2)
-Setiap aksi agen dicatat sebagai event append-only. Sistem dapat mendeteksi perubahan secara real-time.
+Every agent action is recorded as an append-only event. The system can detect changes in real time.
 
-**Independent Test**: Setelah file diubah, event tersimpan secara otomatis tanpa perlu manual log.
+**Independent Test**: After a file is modified, the event is saved automatically without manual logging.
 
 ---
 

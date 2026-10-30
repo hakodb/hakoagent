@@ -1,99 +1,99 @@
-# HakoAgent - Instalasi dan Penggunaan
+# HakoAgent — Installation and Usage
 
-## 1. Instalasi
+## 1. Installation
 
-### Prasyarat
+### Prerequisites
 - Python 3 (stdlib only, no external dependencies)
 
-### Instalasi
+### Install
 
 ```bash
-# Clone repositori
+# Clone the repository
 git clone https://github.com/hakodb/hakoagent.git
 cd hakoagent
 
-# Pasang (installer cross-platform, Python stdlib only)
+# Install (cross-platform installer, Python stdlib only)
 python install.py            # project-local: ./hakoagent + ./lib/ + ./AGENTS.md + .opencode/
-python install.py --global   # global: ~/.local/bin (Linux) | %LOCALAPPDATA%\hakoagent\bin + shims .cmd (Windows)
-export PATH="$HOME/.local/bin:$PATH"   # Linux saja; Windows: setx PATH (diprint oleh installer)
+python install.py --global   # global: ~/.local/bin (Linux) | %LOCALAPPDATA%\hakoagent\bin + .cmd shims (Windows)
+export PATH="$HOME/.local/bin:$PATH"   # Linux only; Windows: setx PATH (printed by the installer)
 
-# Verifikasi instalasi
+# Verify the installation
 hakoagent --help
 ```
 
-Catatan:
-- `install.py` mengunduh native hakodb library dari release terbaru `github.com/hakodb/hakodb`
-  (Windows x86_64: `.dll`, Linux x86_64: `.so`) serta memverifikasinya via `SHA256SUMS`.
-- **HakoAgent menolak berjalan tanpa native library** (tidak ada fallback JSON).
-- macOS belum didukung (belum ada native library) — installer berhenti dengan pesan jelas.
-- Windows: eksekusi script via interpreter, contoh `python hakoagent --help`; MCP config
-  ditulis dengan `python "<path hakoagent-mcp>"` sebagai command.
-- `--remove-data` pada uninstall ikut menghapus `.hakoagent/`.
+Notes:
+- `install.py` downloads the native hakodb library from the latest `github.com/hakodb/hakodb`
+  release (Windows x86_64: `.dll`, Linux x86_64: `.so`) and verifies it against `SHA256SUMS`.
+- **HakoAgent refuses to run without the native library** (no JSON fallback).
+- macOS is not supported yet (no native library) — the installer exits with a clear message.
+- Windows: run the scripts through the interpreter, e.g. `python hakoagent --help`; MCP config
+  is written with `python "<path to hakoagent-mcp>"` as the command.
+- `--remove-data` on uninstall also deletes `.hakoagent/`.
 
-### Inisialisasi Database (sekali saja per proyek)
+### Database initialization (once per project)
 
 ```bash
-cd /path/to/proyek
+cd /path/to/project
 hakoagent init --db ./.hakoagent/hakoagent.db --collections all
 ```
 
-Ini akan membuat:
-- Direktori `.hakoagent/` di root proyek
-- 9 koleksi: sessions, events, decisions, findings, code_index, tasks, context_cache, skills, lessons_learned
-- File konfigurasi OpenCode: `.opencode/skills/hakoagent-usage-pattern/SKILL.md` dan `.opencode/commands/hakoagent.md`
+This creates:
+- A `.hakoagent/` directory at the project root
+- 9 primary collections: sessions, events, decisions, findings, code_index, tasks, context_cache, skills, lessons_learned
+- OpenCode config files: `.opencode/skills/hakoagent-usage-pattern/SKILL.md` and `.opencode/commands/hakoagent.md`
 
 ---
 
-## 2. Inisialisasi Database
+## 2. Database initialization
 
-Setiap proyek yang akan menggunakan HakoAgent perlu diinisialisasi terlebih dahulu:
+Every project that will use HakoAgent must be initialized first:
 
 ```bash
-cd /path/to/proyek
+cd /path/to/project
 hakoagent init --db ./.hakoagent/hakoagent.db --collections all
 ```
 
-Ini akan membuat:
-- Direktori `.hakoagent/` di root proyek
-- File database `hakoagent.db`
-- 9 koleksi: sessions, events, decisions, findings, code_index, tasks, context_cache, skills, lessons_learned
+This creates:
+- A `.hakoagent/` directory at the project root
+- A `hakoagent.db` database file
+- 9 primary collections: sessions, events, decisions, findings, code_index, tasks, context_cache, skills, lessons_learned
 
 ---
 
-## 3. Perintah CLI (Command Line Interface)
+## 3. CLI commands
 
-| Command | Deskripsi | Contoh Penggunaan |
-|---------|-----------|-------------------|
-| `hakoagent init` | Inisialisasi database dan koleksi | `hakoagent init --db ./.hakoagent/hakoagent.db --collections all` |
-| `hakoagent index` | Scan dan index codebase | `hakoagent index` |
-| `hakoagent recall` | Ambil konteks dari memori (HNSW + FTS) | `hakoagent recall "error handling Rust"` |
-| `hakoagent skill list` | Lihat semua skill aktif | `hakoagent skill list` |
-| `hakoagent skill add` | Tambah skill baru | `hakoagent skill add "rust-error-handling"` |
-| `hakoagent task list` | Lihat tugas dan status | `hakoagent task list` |
-| `hakoagent events` | Lihat histori kronologis | `hakoagent events` |
-| `hakoagent vigilance` | Deteksi file terlupakan / regresi | `hakoagent vigilance` |
-| `hakoagent cache stats` | Lihat statistik cache | `hakoagent cache stats` |
-| `hakoagent cache get` | Ambil konteks dari cache | `hakoagent cache get "query"` |
-| `hakoagent cache put` | Simpan konteks ke cache | `hakoagent cache put "query" "summary"` |
-| `hakoagent graph traverse` | Traversal graph dependensi | `hakoagent graph traverse <node> <dir> <depth>` |
-| `hakoagent graph shortest-path` | Jalur terpendek (Dijkstra) | `hakoagent graph shortest-path <from> <to>` |
-| `hakoagent graph dependents` | File yang bergantung pada node | `hakoagent graph dependents <node>` |
-| `hakoagent graph dependents-reverse` | File yang bergantung oleh node | `hakoagent graph dependents-reverse <node>` |
-| `hakoagent revision prune` | Hapus revisi koleksi volatil | `hakoagent revision prune --dry-run` |
-| `hakoagent mcp enable` | Aktifkan MCP untuk proyek ini | `hakoagent mcp enable` |
-| `hakoagent mcp disable` | Nonaktifkan MCP proyek ini | `hakoagent mcp disable` |
-| `hakoagent mcp status` | Cek status MCP proyek | `hakoagent mcp status` |
+| Command | Description | Example |
+|---------|-------------|---------|
+| `hakoagent init` | Initialize database and collections | `hakoagent init --db ./.hakoagent/hakoagent.db --collections all` |
+| `hakoagent index` | Scan and index the codebase | `hakoagent index` |
+| `hakoagent recall` | Retrieve context from memory (HNSW + FTS) | `hakoagent recall "Rust error handling"` |
+| `hakoagent skill list` | List all active skills | `hakoagent skill list` |
+| `hakoagent skill add` | Add a new skill | `hakoagent skill add "rust-error-handling-pattern"` |
+| `hakoagent task list` | List tasks and status | `hakoagent task list` |
+| `hakoagent events` | View chronological history | `hakoagent events` |
+| `hakoagent vigilance` | Detect forgotten files / regressions | `hakoagent vigilance` |
+| `hakoagent cache stats` | View cache statistics | `hakoagent cache stats` |
+| `hakoagent cache get` | Retrieve context from the cache | `hakoagent cache get "query"` |
+| `hakoagent cache put` | Store context in the cache | `hakoagent cache put "query" "summary"` |
+| `hakoagent graph traverse` | Dependency graph traversal | `hakoagent graph traverse <node> <dir> <depth>` |
+| `hakoagent graph shortest-path` | Shortest path (Dijkstra) | `hakoagent graph shortest-path <from> <to>` |
+| `hakoagent graph dependents` | Files depending on a node | `hakoagent graph dependents <node>` |
+| `hakoagent graph dependents-reverse` | Files a node depends on | `hakoagent graph dependents-reverse <node>` |
+| `hakoagent revision prune` | Remove volatile-collection revisions | `hakoagent revision prune --dry-run` |
+| `hakoagent mcp enable` | Enable MCP for this project | `hakoagent mcp enable` |
+| `hakoagent mcp disable` | Disable MCP for this project | `hakoagent mcp disable` |
+| `hakoagent mcp status` | Check MCP status for this project | `hakoagent mcp status` |
 
 ---
 
-## 4. Contoh Penggunaan
+## 4. Usage examples
 
-### 4.1 Inisialisasi dan Pengaturan Awal
+### 4.1 Initialization and first setup
 
-Inisialisasi database di root proyek Anda:
+Initialize the database at your project root:
 
 ```bash
-cd /proyek-anda
+cd /your-project
 hakoagent init --db ./.hakoagent/hakoagent.db --collections all
 ```
 
@@ -104,18 +104,18 @@ HakoAgent database initialized at: ./.hakoagent/hakoagent.db
 Collections: ["sessions", "events", "decisions", "findings", "code_index", "tasks", "context_cache", "skills", "lessons_learned"]
 ```
 
-### 4.2 Mengambil Konteks (Anti-Lupa dan Codebase Fluency)
+### 4.2 Retrieving context (anti-forgetting and codebase fluency)
 
-Sebelum mencari informasi di codebase secara manual, jalankan `hakoagent recall` terlebih dahulu:
+Prior to searching information manually in the codebase, run `hakoagent recall` first:
 
 ```bash
-hakoagent recall "bagus implementasi error handling Rust" --limit 5
+hakoagent recall "Rust error handling best practices" --limit 5
 ```
 
 Output:
 
 ```
-Query: bagus implementasi error handling Rust
+Query: Rust error handling best practices
 Context retrieval initialized (HNSW + FTS + summarizer + cache).
   Results:
     - speckit-core/src/memory/mod.rs :: mod
@@ -123,134 +123,134 @@ Context retrieval initialized (HNSW + FTS + summarizer + cache).
     - speckit-core/src/memory/events.rs :: events
 ```
 
-### 4.3 Manajemen Skill (Self Skill Improvement)
+### 4.3 Skill management (self skill improvement)
 
 ```bash
-# Lihat semua skill aktif
+# List the active skills
 hakoagent skill list
 
-# Tambah skill baru
+# Add a new skill
 hakoagent skill add "python-error-handling-pattern"
 
-# Simpan ke cache untuk reuse
-hakoagent cache put "error-handling-python" "Gunakan try/except yang spesifik, hindari bare except, propagasi dengan raise ... from exc"
+# Store in the cache for reuse
+hakoagent cache put "error-handling-python" "Use specific try/except, avoid bare except, re-raise with raise ... from exc"
 
-# Ambil dari cache (cepat, tanpa panggilan LLM)
+# Retrieve from the cache (fast, no LLM calls)
 hakoagent cache get "error-handling-python"
 ```
 
-### 4.4 Manajemen Task (Clear Target)
+### 4.4 Task management (clear targets)
 
 ```bash
-# Lihat semua tugas
+# List the tasks
 hakoagent task list
 
-# Buat task baru dengan target dan DoD
-hakoagent task create "Implement error handling" "Semua fungsi publik harus menggunakan Result<T, E>" "Unit test >= 80% coverage, dokumen diupdate" P1
+# Create a task with a target and definition of done
+hakoagent task create "Implement error handling" "All public functions must use Result<T, E>" "Unit tests >= 80% coverage, docs updated" P1
 
-# Tandai task selesai
+# Mark a task complete
 hakoagent task complete <task_id>
 
-# Lihat semua tugas
+# List the tasks
 hakoagent task list
 ```
 
-### 4.5 Vigilance Check (Cekatan)
+### 4.5 Vigilance checks
 
 ```bash
-# Deteksi file yang diubah tapi tidak diuji, TODO tertinggal, regresi
+# Detect edited-but-untested files, leftover TODOs, regressions
 hakoagent vigilance
 ```
 
-### 4.6 Cache Management (Context Frugality)
+### 4.6 Cache management (context frugality)
 
 ```bash
-# Lihat statistik cache
+# View cache statistics
 hakoagent cache stats
 
-# Simpan konteks manual ke cache
-hakoagent cache put "query-contoh" "ringkasan hasil pencarian" 300
+# Manually store context in the cache
+hakoagent cache put "sample-query" "summary of the search results" 300
 
-# Ambil konteks dari cache (cepat, tanpa panggilan LLM)
-hakoagent cache get "query-contoh"
+# Retrieve context from the cache (fast, no LLM calls)
+hakoagent cache get "sample-query"
 ```
 
-### 4.7 Graph Traversal (Codebase Fluency)
+### 4.7 Graph traversal (codebase fluency)
 
 ```bash
-# Traversal dari simbol tertentu (misal: fungsi validate_input)
+# Traverse from a symbol (e.g. the function validate_input)
 hakoagent graph traverse validate_input in 2
 
-# Cari jalur terpendek antara dua simbol
+# Find the shortest path between two symbols
 hakoagent graph shortest-path main error_handler
 
-# Lihat apa yang bergantung pada suatu file
+# See what depends on a file
 hakoagent graph dependents src/utils.rs
 
-# Lihat apa yang dipanggil oleh suatu fungsi
+# See what a function calls
 hakoagent graph dependents-reverse src/main.rs
 
-# Lihat blast radius sebelum mengedit file
+# View the blast radius before editing a file
 hakoagent impact src/main.rs
 ```
 
 ---
 
-## 5. Koleksi Data (HakoDB)
+## 5. Data collections (HakoDB)
 
-Semua data disimpan di `./.hakoagent/hakoagent.db` dengan 9 koleksi:
+All data lives in `./.hakoagent/hakoagent.db` with 9 primary collections:
 
-| Koleksi | Fungsi |
-|---------|--------|
-| `sessions` | Riwayat sesi agent (started_at, ended_at, status) |
-| `events` | Histori kronologis semua tindakan (append-only) |
-| `decisions` | Keputusan arsitektur + alasan + konsekuensi |
-| `findings` | Temuan codebase, bug, pola, catatan error |
-| `code_index` | Simbol, file, dependensi (untuk graph traversal) |
-| `tasks` | Tugas dengan target, prioritas, DoD, status |
-| `context_cache` | Cache konteks ringkas untuk mengurangi panggilan LLM |
-| `skills` | Skill/pola berhasil untuk reuse |
-| `lessons_learned` | Pelajaran dari kegagalan untuk dihindari |
+| Collection | Purpose |
+|------------|---------|
+| `sessions` | Agent session records (started_at, ended_at, status) |
+| `events` | Chronological history of all actions (append-only) |
+| `decisions` | Architecture decisions + rationale + consequences |
+| `findings` | Codebase findings, bugs, patterns, error notes |
+| `code_index` | Symbols, files, dependencies (for graph traversal) |
+| `tasks` | Tasks with target, priority, DoD, status |
+| `context_cache` | Compact context cache reducing LLM calls |
+| `skills` | Successful skills/patterns for reuse |
+| `lessons_learned` | Lessons from failures to avoid |
 
 ---
 
-## 6. Integrasi dengan Harness Agent (OpenCode)
+## 6. Harness agent integration (OpenCode)
 
-HakoAgent dirancang sebagai addon/skill untuk harness agent seperti OpenCode. Untuk mengintegrasikan:
+HakoAgent is designed as an add-on/skill for personal harness agents like OpenCode. To integrate:
 
-1. **Tambahkan hakoagent ke konfigurasi agent** Anda agar dapat memanggil perintah `hakoagent` dari dalam chat
-2. **Gunakan template interaksi** berikut dalam prompt sistem agent:
+1. **Add hakoagent to your agent configuration** so the `hakoagent` command can be called from within chat
+2. **Use the following interaction template** in the agent's system prompt:
 
 ```
-Anda adalah agen AI dengan akses ke HakoAgent Memory System. Gunakan perintah berikut:
+You are an AI agent with access to the HakoAgent Memory System. Use these commands:
 
-- hakoagent recall <query> - Ambil konteks dari memori (jangan lupa untuk mengecek cache dulu)
-- hakoagent skill list - Lihat skill yang tersedia
-- hakoagent task list - Lihat tugas dan status
-- hakoagent events - Lihat histori tindakan
-- hakoagent vigilance - Deteksi regresi dan file terlupakan
-- hakoagent graph traverse <node> <dir> <depth> - Telusuri dependensi codebase
-- hakoagent graph shortest-path <from> <to> - Cari jalur terpendek antar simbol
-- hakoagent cache stats - Lihat statistik cache
-- hakoagent cache put <query> <summary> [ttl] - Simpan konteks ke cache
+- hakoagent recall <query> - Retrieve context from memory (do not forget to check the cache first)
+- hakoagent skill list - List the available skills
+- hakoagent task list - List tasks and status
+- hakoagent events - View the action history
+- hakoagent vigilance - Detect regressions and forgotten files
+- hakoagent graph traverse <node> <dir> <depth> - Traverse codebase dependencies
+- hakoagent graph shortest-path <from> <to> - Find the shortest path between symbols
+- hakoagent cache stats - View cache statistics
+- hakoagent cache put <query> <summary> [ttl] - Store context in the cache
 
-Selalu gunakan hakoagent recall sebelum mencari informasi di codebase untuk mengurangi panggilan endpoint LLM.
+Always use hakoagent recall before searching information in the codebase to reduce LLM endpoint calls.
 ```
 
-### 6.1 MCP Server (opsional, per proyek)
+### 6.1 MCP server (optional, per project)
 
-MCP **mati secara default**. Instalasi global tidak menulis konfigurasi MCP ke `~/.claude.json`
-maupun `~/.config/opencode/opencode.jsonc`.
+MCP is **off by default**. A global install does not write MCP config to `~/.claude.json`
+or `~/.config/opencode/opencode.jsonc`.
 
 ```bash
-cd /path/to/proyek
-hakoagent mcp enable    # buat .hakoagent/mcp-enabled + tulis mcp.servers.hakoagent
-hakoagent mcp status    # cek status
-hakoagent mcp disable   # hapus marker + entri konfigurasi
+cd /path/to/project
+hakoagent mcp enable    # creates .hakoagent/mcp-enabled + writes mcp.servers.hakoagent
+hakoagent mcp status    # check status
+hakoagent mcp disable   # removes the marker + config entry
 ```
 
-`mcp enable` menulis entri OpenCode V2 berikut ke `opencode.json` (atau
-`.opencode/opencode.json`) dengan path absolut:
+`mcp enable` writes the following OpenCode V2 entry to `opencode.json` (or
+`.opencode/opencode.json`) with absolute paths:
 
 ```json
 {
@@ -265,18 +265,18 @@ hakoagent mcp disable   # hapus marker + entri konfigurasi
 }
 ```
 
-Jika proyek hanya punya `opencode.jsonc`, perintah akan mencetak snippet untuk ditempel manual
-agar komentar tidak hilang. Setelah enable, restart sesi OpenCode atau jalankan `hakoagent-mcp`.
+If the project only has `opencode.jsonc`, the command prints a snippet for manual pasting so
+comments are not lost. After enabling, restart the OpenCode session or run `hakoagent-mcp`.
 
 ---
 
-## 7. Arsitektur Data
+## 7. Data architecture
 
-Semua data disimpan di `./.hakoagent/memory/<koleksi>/` sebagai file JSON:
+All data is stored under `./.hakoagent/` via the hakodb engine:
 
 ```
 .hakoagent/
-├── memory/          # JSON files per collection
+├── memory/          # data per collection
 │   ├── sessions/
 │   ├── events/
 │   ├── decisions/
@@ -286,30 +286,31 @@ Semua data disimpan di `./.hakoagent/memory/<koleksi>/` sebagai file JSON:
 │   ├── context_cache/
 │   ├── skills/
 │   └── lessons_learned/
-├── skills/          # File skill dalam format Markdown
-├── sessions/        # Export sesi (opsional)
-└── logs/            # Log operasi (opsional)
+├── skills/          # skill files in Markdown format
+├── sessions/        # session exports (optional)
+└── logs/            # operation logs (optional)
 ```
 
 ## 8. Troubleshooting
 
-| Masalah | Solusi |
-|---------|--------|
-| `hakoagent: command not found` | Pastikan `~/.local/bin` ada di PATH: `export PATH="$HOME/.local/bin:$PATH"` |
-| `Database not found` | Jalankan `hakoagent init --db ./.hakoagent/hakoagent.db --collections all` dulu |
-| `Cache empty` | Jalankan `hakoagent recall <query>` minimal sekali untuk mengisi cache |
-| `Graph empty` | Pastikan codebase sudah diindex dengan `hakoagent init` atau `hakoagent index` |
+| Issue | Solution |
+|-------|----------|
+| `hakoagent: command not found` | Make sure `~/.local/bin` is on PATH: `export PATH="$HOME/.local/bin:$PATH"` (Windows: add `%LOCALAPPDATA%\hakoagent\bin` to PATH) |
+| `Database not found` | Run `hakoagent init --db ./.hakoagent/hakoagent.db --collections all` first |
+| `Cache empty` | Run `hakoagent recall <query>` at least once to populate the cache |
+| `Graph empty` | Make sure the codebase is indexed via `hakoagent init` or `hakoagent index` |
+| hakodb native library missing | Run `python install.py` to download the library for your platform (see section 1) |
 
 ---
 
-## 9. Lisensi
+## 9. License
 
-MIT License - sama dengan HakoDB. Lihat `LICENSE-MIT` di repositori HakoDB.
+MIT License — same as HakoDB. See `LICENSE-MIT` in the HakoDB repository.
 
 ---
 
-## 10. Kontak dan Dukungan
+## 10. Contact and support
 
-- Repositori: https://github.com/hakodb/hakoagent
-- Dokumentasi: /docs/
-- Lisensi: MIT
+- Repository: https://github.com/hakodb/hakoagent
+- Documentation: https://github.com/hakodb.github.io (HakoDB docs site)
+- License: MIT

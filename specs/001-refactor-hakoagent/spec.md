@@ -6,132 +6,132 @@
 
 **Status**: Draft
 
-**Input**: User description: "refactor hakoagent sesuai konstitusi terbaru"
+**Input**: User description: "refactor hakoagent according to the latest constitution"
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Agen menggunakan tool calling HakoAgent untuk mengelola memori dan skill (Priority: P1)
+### User Story 1 - Agent uses HakoAgent tool calling to manage memory and skills (Priority: P1)
 
-Agen AI dalam harness (OpenCode) dapat memanggil tool HakoAgent untuk menyimpan event, mencari konteks, membuat task, dan mengelola skill dalam format Markdown, semuanya melalui antarmuka yang konsisten dan terukur.
+The AI agent in the harness (OpenCode) can call HakoAgent tools to save events, search context, create tasks, and manage skills in Markdown format, all through a consistent and measurable interface.
 
-**Why this priority**: Ini adalah inti dari konstitusi — agen harus mampu berinteraksi dengan memori HakoDB dan skill melalui tool calling yang mudah digunakan, tanpa referensi ke tool eksternal seperti hakoagent.
+**Why this priority**: This is the core of the constitution — the agent must be able to interact with HakoDB memory and skills through easy-to-use tool calling, without references to external tools such as hakoagent.
 
-**Independent Test**: Dapat diuji secara independen dengan memanggil setiap tool HakoAgent (init, recall, event_log, skill_add, task_create, dll.) dan memverifikasi bahwa file di `.hakoagent/` dibuat atau diperbarui dengan benar.
+**Independent Test**: Can be tested independently by calling each HakoAgent tool (init, recall, event_log, skill_add, task_create, etc.) and verifying that files under `.hakoagent/` are created or updated correctly.
 
 **Acceptance Scenarios**:
 
-1. **Given** direktori `.hakoagent/` belum ada, **When** agen memanggil `hakoagent.init`, **Then** direktori `.hakoagent/` dan database `hakoagent.db` dibuat dengan semua 9 koleksi
-2. **Given** agen telah menyelesaikan tugas, **When** agen memanggil `hakoagent.event_log` dengan action dan target, **Then** event ditambahkan ke koleksi `events` dengan timestamp dan tidak dapat di-overwrite
-3. **Given** ada skill baru yang diekstrak dari tugas, **When** agen memanggil `hakoagent.skill_add` dengan konten Markdown, **Then** file skill baru dibuat di `.hakoagent/skills/` dengan format Markdown
-4. **Given** agen ingin mencari konteks, **When** agen memanggil `hakoagent.recall` dengan query, **Then** hasil konteks relevan dikembalikan dalam waktu target
+1. **Given** the `.hakoagent/` directory does not exist yet, **When** the agent calls `hakoagent.init`, **Then** the `.hakoagent/` directory and the `hakoagent.db` database are created with all 9 collections
+2. **Given** the agent has completed a task, **When** the agent calls `hakoagent.event_log` with an action and target, **Then** the event is appended to the `events` collection with a timestamp and cannot be overwritten
+3. **Given** there is a new skill extracted from a task, **When** the agent calls `hakoagent.skill_add` with Markdown content, **Then** a new skill file is created under `.hakoagent/skills/` in Markdown format
+4. **Given** the agent wants to search context, **When** the agent calls `hakoagent.recall` with a query, **Then** relevant context results are returned within the target time
 
 ---
 
-### User Story 2 - Agen menyimpan dan mengambil skill dalam format Markdown (Priority: P2)
+### User Story 2 - Agent saves and retrieves skills in Markdown format (Priority: P2)
 
-Setiap pola sukses atau pelajaran dari tugas disimpan sebagai file skill Markdown di `.hakoagent/skills/`, dapat dicari, dan di-reuse untuk tugas serupa di masa depan.
+Every success pattern or lesson learned from tasks is saved as a Markdown skill file under `.hakoagent/skills/`, searchable, and reusable for similar tasks in the future.
 
-**Why this priority**: Prinsip Self Skill Improvement memerlukan penyimpanan skill yang mudah dibaca, diedit, dan di-version control. Markdown dipilih karena tidak perlu parser khusus.
+**Why this priority**: The Self Skill Improvement principle requires skills to be stored in a format that is easy to read, edit, and version control. Markdown was chosen because it needs no special parser.
 
-**Independent Test**: Dapat diuji dengan membuat file skill Markdown, lalu mencarinya melalui `hakoagent.skill_list` atau `hakoagent.skill_get`, dan memverifikasi konten yang dikembalikan.
+**Independent Test**: Can be tested by creating a Markdown skill file, then finding it via `hakoagent.skill_list` or `hakoagent.skill_get`, and verifying the returned content.
 
 **Acceptance Scenarios**:
 
-1. **Given** agen mengekstrak pola sukses dari tugas, **When** agen menyimpan skill sebagai file Markdown di `.hakoagent/skills/`, **Then** file memiliki metadata (skill_id, name, status, tags, success_count, failure_count) dan contoh kode
-2. **Given** ada beberapa skill aktif, **When** agen memanggil `hakoagent.skill_list`, **Then** semua skill aktif ditampilkan dengan nama dan jumlah kesuksesan/kegagalan
-3. **Given** skill tertentu dibutuhkan, **When** agen memanggil `hakoagent.skill_get` dengan skill_id, **Then** konten lengkap skill dalam format Markdown dikembalikan
+1. **Given** the agent extracts a success pattern from a task, **When** the agent saves the skill as a Markdown file under `.hakoagent/skills/`, **Then** the file has metadata (skill_id, name, status, tags, success_count, failure_count) and code examples
+2. **Given** there are multiple active skills, **When** the agent calls `hakoagent.skill_list`, **Then** all active skills are listed with their names and success/failure counts
+3. **Given** a specific skill is needed, **When** the agent calls `hakoagent.skill_get` with a skill_id, **Then** the full skill content in Markdown format is returned
 
 ---
 
-### User Story 3 - Agen melacak task dengan target dan DoD yang terukur (Priority: P2)
+### User Story 3 - Agent tracks tasks with measurable targets and DoD (Priority: P2)
 
-Setiap tugas yang dikerjakan agen memiliki target dan Definition of Done yang dicatat di koleksi `tasks`, sehingga progres dapat diverifikasi dan konsisten lintas model LLM.
+Every task the agent works on has a target and Definition of Done recorded in the `tasks` collection, so progress can be verified and stays consistent across LLM models.
 
-**Why this priority**: Prinsip Clear Target memastikan setiap tugas memiliki tujuan yang terukur dan tidak ambigu, mendukung konsistensi lintas model.
+**Why this priority**: The Clear Target principle ensures every task has a measurable, unambiguous goal, supporting consistency across models.
 
-**Independent Test**: Dapat diuji dengan membuat task baru via `hakoagent.task_create`, lalu memverifikasi via `hakoagent.task_list` bahwa target dan DoD tercatat dengan benar.
+**Independent Test**: Can be tested by creating a new task via `hakoagent.task_create`, then verifying via `hakoagent.task_list` that the target and DoD are recorded correctly.
 
 **Acceptance Scenarios**:
 
-1. **Given** agen akan mulai tugas baru, **When** agen memanggil `hakoagent.task_create` dengan title, target, dan definition_of_done, **Then** task baru dibuat di koleksi `tasks` dengan status "todo"
-2. **Given** task telah selesai, **When** agen memanggil `hakoagent.task_complete` dengan dod_verified=true, **Then** status task berubah menjadi "done" dan tanggal selesai dicatat
-3. **Given** ada task yang belum selesai, **When** agen memanggil `hakoagent.task_list`, **Then** semua task dengan status "todo" atau "in-progress" ditampilkan
+1. **Given** the agent is about to start a new task, **When** the agent calls `hakoagent.task_create` with title, target, and definition_of_done, **Then** a new task is created in the `tasks` collection with status "todo"
+2. **Given** a task has been completed, **When** the agent calls `hakoagent.task_complete` with dod_verified=true, **Then** the task status changes to "done" and the completion date is recorded
+3. **Given** there are unfinished tasks, **When** the agent calls `hakoagent.task_list`, **Then** all tasks with status "todo" or "in-progress" are listed
 
 ---
 
-### User Story 4 - Agen mendeteksi regresi dan file terlupakan (Priority: P3)
+### User Story 4 - Agent detects regressions and overlooked files (Priority: P3)
 
-Vigilance Checker secara otomatis mendeteksi file yang diubah tapi tidak diuji, TODO yang belum disentuh, dan regresi terhadap prinsip konstitusi.
+The Vigilance Checker automatically detects files that were changed but not tested, untouched TODOs, and regressions against constitution principles.
 
-**Why this priority**: Prinsip Vigilance membantu menjaga kualitas kode dan kepatuhan konstitusi tanpa intervensi manual yang berlebihan.
+**Why this priority**: The Vigilance principle helps maintain code quality and constitution compliance without excessive manual intervention.
 
-**Independent Test**: Dapat diuji dengan menjalankan `hakoagent.vigilance` pada direktori proyek dan memverifikasi laporan yang dihasilkan.
+**Independent Test**: Can be tested by running `hakoagent.vigilance` on the project directory and verifying the generated report.
 
 **Acceptance Scenarios**:
 
-1. **Given** ada file yang diubah tapi tidak ada test yang sesuai, **When** agen menjalankan `hakoagent.vigilance`, **Then** file tersebut terdaftar dalam laporan unused files
-2. **Given** ada komentar TODO atau FIXME di source code, **When** agen menjalankan `hakoagent.vigilance`, **Then** semua item TODO terdaftar dengan lokasi file dan baris
-3. **Given** konstitusi ada di `.specify/memory/constitution.md`, **When** agen menjalankan `hakoagent.vigilance`, **Then** pemeriksaan regresi terhadap prinsip konstitusi dilaporkan (misal: apakah konstitusi masih ada, koleksi events tersedia)
+1. **Given** there is a file that was changed but has no corresponding test, **When** the agent runs `hakoagent.vigilance`, **Then** that file is listed in the unused files report
+2. **Given** there are TODO or FIXME comments in source code, **When** the agent runs `hakoagent.vigilance`, **Then** all TODO items are listed with file location and line numbers
+3. **Given** the constitution exists at `.specify/memory/constitution.md`, **When** the agent runs `hakoagent.vigilance`, **Then** regression checks against constitution principles are reported (e.g.: whether the constitution still exists, whether the events collection is available)
 
 ---
 
 ### Edge Cases
 
-- Agen memanggil tool dengan parameter yang kosong atau invalid → sistem mengembalikan error pesan yang jelas
-- Database HakoDB sudah ada dari inisialisasi sebelumnya → inisialisasi tidak menimpa data yang ada
-- Skill dengan nama yang sama sudah ada → sistem memberikan peringatan atau menambahkan suffix
-- Direktori `.hakoagent/` tidak writable → error izin file yang jelas
-- Query recall tidak cocok dengan dokumen apapun → hasil kosong dengan pesan yang informatif
+- The agent calls a tool with empty or invalid parameters → the system returns an error with a clear message
+- The HakoDB database already exists from a previous initialization → initialization does not overwrite existing data
+- A skill with the same name already exists → the system issues a warning or appends a suffix
+- The `.hakoagent/` directory is not writable → a clear file permission error
+- A recall query matches no documents → an empty result with an informative message
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: Sistem MUST menyediakan antarmuka tool calling untuk agen harness dengan nama yang diawali `hakoagent.`
-- **FR-002**: Sistem MUST menyimpan semua data memori dalam database HakoDB tunggal di `.hakoagent/hakoagent.db`
-- **FR-003**: Sistem MUST memiliki 9 koleksi: sessions, events, decisions, findings, code_index, tasks, context_cache, skills, lessons_learned
-- **FR-004**: Sistem MUST menyimpan setiap tindakan agen sebagai event append-only di koleksi `events` dengan timestamp. Penegakan append-only dilakukan pada tingkat aplikasi: sistem memeriksa apakah `event_id` sudah ada sebelum menulis, dan menolak operasi overwrite.
-- **FR-005**: Sistem MUST menyimpan skill sebagai file Markdown di `.hakoagent/skills/`, bukan format YAML atau JSON
-- **FR-006**: Sistem MUST memiliki setiap task dengan `target` dan `definition_of_done` yang terdefinisi dan terukur
-- **FR-007**: Sistem MUST menyediakan tool `hakoagent.recall` untuk mencari konteks via HNSW + FTS
-- **FR-008**: Sistem MUST menyediakan tool `hakoagent.vigilance` untuk deteksi regresi, file terlupakan, dan TODO
-- **FR-009**: Sistem MUST tidak memiliki referensi ke tool eksternal seperti hakoagent di seluruh kode dan dokumentasi
-- **FR-010**: Sistem MUST menyimpan semua file terkait hakoagent di bawah direktori `.hakoagent/` atau root proyek
+- **FR-001**: The system MUST provide a tool calling interface for the agent harness with names prefixed `hakoagent.`
+- **FR-002**: The system MUST store all memory data in a single HakoDB database at `.hakoagent/hakoagent.db`
+- **FR-003**: The system MUST have 9 collections: sessions, events, decisions, findings, code_index, tasks, context_cache, skills, lessons_learned
+- **FR-004**: The system MUST store every agent action as an append-only event in the `events` collection with a timestamp. Append-only enforcement is done at the application level: the system checks whether `event_id` already exists before writing, and rejects overwrite operations.
+- **FR-005**: The system MUST store skills as Markdown files under `.hakoagent/skills/`, not in YAML or JSON format
+- **FR-006**: The system MUST have every task carry a `target` and `definition_of_done` that are defined and measurable
+- **FR-007**: The system MUST provide a `hakoagent.recall` tool to search context via HNSW + FTS
+- **FR-008**: The system MUST provide a `hakoagent.vigilance` tool to detect regressions, overlooked files, and TODOs
+- **FR-009**: The system MUST contain no references to external tools such as hakoagent in any code or documentation
+- **FR-010**: The system MUST store all hakoagent-related files under the `.hakoagent/` directory or the project root
 
 ### Key Entities *(include if feature involves data)*
 
-- **Event**: Tindakan agen yang dicatat dengan event_id, timestamp, session_id, actor, action, target, change_type, metadata
-- **Session**: Riwayat sesi agen dengan session_id, started_at, ended_at, ringkasan, status, model_used
-- **Task**: Tugas dengan task_id, title, target, definition_of_done, prioritas, status, dod_verified
-- **Skill**: Pola sukses dalam format Markdown dengan skill_id, name, description, context_tags, success_count, failure_count, status
-- **Finding**: Temuan codebase dengan finding_id, content, finding_type, file, referensi event
-- **Decision**: Keputusan arsitektur dengan decision_id, title, rationale, consequences, referensi event
-- **CodeIndex**: Entri indeks kode dengan entry_id, file_path, symbol_name, symbol_type, dependensi
+- **Event**: An agent action recorded with event_id, timestamp, session_id, actor, action, target, change_type, metadata
+- **Session**: Agent session history with session_id, started_at, ended_at, summary, status, model_used
+- **Task**: A task with task_id, title, target, definition_of_done, priority, status, dod_verified
+- **Skill**: A success pattern in Markdown format with skill_id, name, description, context_tags, success_count, failure_count, status
+- **Finding**: A codebase finding with finding_id, content, finding_type, file, event reference
+- **Decision**: An architecture decision with decision_id, title, rationale, consequences, event reference
+- **CodeIndex**: A code index entry with entry_id, file_path, symbol_name, symbol_type, dependencies
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Agen dapat menyelesaikan siklus tugas lengkap (init → recall → event_log → task_create → skill_add → task_complete) dalam waktu < 30 detik
-- **SC-002**: 100% task yang ditandai selesai memiliki `definition_of_done` yang terisi dan diverifikasi
-- **SC-003**: 0 referensi ke "hakoagent" ditemukan di seluruh file sumber, dokumentasi, dan konfigurasi proyek
-- **SC-004**: 100% skill disimpan sebagai file Markdown (`.md`) di `.hakoagent/skills/`
-- **SC-005**: Setiap event yang ditulis ke koleksi `events` memiliki timestamp ISO 8601 dan tidak dapat di-overwrite
-- **SC-006**: Tool calling HakoAgent dapat ditemukan dan dipanggil oleh harness agent tanpa konfigurasi tambahan yang kompleks
+- **SC-001**: The agent can complete a full task cycle (init → recall → event_log → task_create → skill_add → task_complete) in under 30 seconds
+- **SC-002**: 100% of tasks marked complete have a filled-in and verified `definition_of_done`
+- **SC-003**: 0 references to "hakoagent" found across all source files, documentation, and project configuration
+- **SC-004**: 100% of skills are stored as Markdown files (`.md`) under `.hakoagent/skills/`
+- **SC-005**: Every event written to the `events` collection has an ISO 8601 timestamp and cannot be overwritten
+- **SC-006**: HakoAgent tool calling can be discovered and invoked by the harness agent without complex additional configuration
 
 ## Assumptions
 
-- Agen harness (OpenCode) mendukung pemanggilan tool dengan nama yang dapat dikonfigurasi
-- Database HakoDB dapat dibangun dan dijalankan sebagai embedded library tanpa server eksternal
-- Rust toolchain tersedia untuk build core HakoAgent
-- Direktori proyek memiliki izin tulis untuk membuat `.hakoagent/`
-- Format Markdown cukup untuk merepresentasikan metadata skill dan contoh kode
-- Semua interaksi agen dicatat sebagai event secara otomatis tanpa perlu intervensi manual
+- The agent harness (OpenCode) supports invoking tools with configurable names
+- The HakoDB database can be built and run as an embedded library without an external server
+- The Rust toolchain is available to build the HakoAgent core
+- The project directory has write permission to create `.hakoagent/`
+- Markdown format is sufficient to represent skill metadata and code examples
+- All agent interactions are recorded as events automatically without manual intervention
 
 ## Clarifications
 
 ### Session 2026-10-29
 
-- Q: Bagaimana mekanisme penegakan append-only pada koleksi events diimplementasi secara teknis? → A: Application-level guard (kode memeriksa event_id sebelum tulis)
+- Q: How is the append-only enforcement mechanism on the events collection implemented technically? → A: Application-level guard (code checks event_id before write)
 
 ---

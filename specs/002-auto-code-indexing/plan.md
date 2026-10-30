@@ -6,44 +6,44 @@
 
 ## Summary
 
-Auto Codebase Indexing adalah fitur yang memungkinkan HakoAgent secara otomatis memindai dan mengindex codebase tanpa perlu agen memanggil perintah `hakoagent index` secara manual. Saat sesi startup, scanning codebase dijalankan sebagai background thread dalam proses agen yang sama. Jika database belum ada, scanning dilakukan penuh; jika sudah ada, diverifikasi dan diperbarui hanya file yang berubah. Hasil indexing disimpan di koleksi `code_index` di HakoDB. Fitur ini mendukung indexing inkremental, deteksi file baru/dihapus/diubah, dan notifikasi selesai kepada agen.
+Auto Codebase Indexing is a feature that lets HakoAgent automatically scan and index the codebase without the agent calling `hakoagent index` manually. At session startup, codebase scanning runs as a background thread within the same agent process. If the database does not exist yet, a full scan is performed; if it does exist, it is verified and only changed files are updated. Indexing results are stored in the `code_index` collection in HakoDB. The feature supports incremental indexing, detection of new/deleted/changed files, and completion notification to the agent.
 
 ## Technical Context
 
-**Language/Version**: Rust 1.75+ (core), Python 3.11+ (contoh integrasi)
+**Language/Version**: Rust 1.75+ (core), Python 3.11+ (integration example)
 
 **Primary Dependencies**: hakodb 0.19 (embedded core, `--no-default-features`), notify (file system watcher), walkdir (directory traversal), serde (JSON), chrono (timestamp), uuid (ID generation)
 
-**Storage**: HakoDB embedded document database (`.hakoagent/hakoagent.db`), koleksi `code_index` untuk penyimpanan hasil indexing
+**Storage**: HakoDB embedded document database (`.hakoagent/hakoagent.db`), `code_index` collection for storing indexing results
 
-**Testing**: `cargo test` (Rust core), integration tests untuk indexing flow
+**Testing**: `cargo test` (Rust core), integration tests for the indexing flow
 
-**Target Platform**: Linux, macOS, Windows (file system watcher cross-platform)
+**Target Platform**: Linux, macOS, Windows (cross-platform file system watcher)
 
 **Project Type**: CLI tool + library (Rust crate) + FFI bindings
 
-**Performance Goals**: Waktu indexing inkremental untuk satu file < 5 detik (SC-002); startup scan selesai dalam waktu wajar untuk codebase kecil menengah
+**Performance Goals**: Incremental indexing time for one file < 5 seconds (SC-002); startup scan finishes in reasonable time for small-to-medium codebases
 
-**Constraints**: Background thread dalam proses agen (tidak proses terpisah); embedded database (tanpa server); irit context dan endpoint request; semua file di bawah `.hakoagent/` atau root proyek; tidak ada referensi ke hakoagent
+**Constraints**: Background thread within the agent process (no separate process); embedded database (no server); frugal with context and endpoint requests; all files under `.hakoagent/` or the project root; no references to hakoagent
 
-**Scale/Scope**: Single project per database; 9 koleksi HakoDB termasuk `code_index`; file source code (.rs, .py, .js, .ts, .go, dll.)
+**Scale/Scope**: Single project per database; 9 HakoDB collections including `code_index`; source code files (.rs, .py, .js, .ts, .go, etc.)
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-| Prinsip Konstitusi | Status | Catatan |
+| Constitution Principle | Status | Notes |
 |-------------------|--------|---------|
-| Smart Memory | Terpenuhi | Hasil indexing disimpan di `code_index` HakoDB |
-| Anti-Lupa | Terpenuhi | code_index tetap up-to-date secara otomatis |
-| Kronologi & Histori | Terpenuhi | IndexingRun dicatat sebagai event append-only |
-| Consistency | Terpenuhi | Template output standar untuk notifikasi indexing |
-| Cross-Model Consistency | Terpenuhi | Flow indexing sama untuk semua model LLM |
-| Vigilance | Terpenuhi | Deteksi file yang berubah, dihapus, atau baru |
-| Clear Target | Terpenuhi | Setiap tugas indexing punya target dan DoD |
-| Codebase Fluency | Terpenuhi | code_index menyimpan simbol, file, dependensi |
-| Context Frugality | Terpenuhi | Indexing inkremental mengurangi beban endpoint LLM |
-| Self Skill Improvement | Terpenuhi | Pola indexing sukses dapat diekstrak sebagai skill |
+| Smart Memory | Met | Indexing results stored in `code_index` in HakoDB |
+| Anti-Lupa | Met | code_index stays up-to-date automatically |
+| Kronologi & Histori | Met | IndexingRun recorded as an append-only event |
+| Consistency | Met | Standard output template for indexing notifications |
+| Cross-Model Consistency | Met | Same indexing flow for all LLM models |
+| Vigilance | Met | Detects files that changed, were deleted, or are new |
+| Clear Target | Met | Every indexing task has a target and DoD |
+| Codebase Fluency | Met | code_index stores symbols, files, dependencies |
+| Context Frugality | Met | Incremental indexing reduces LLM endpoint load |
+| Self Skill Improvement | Met | Successful indexing patterns can be extracted as skills |
 
 No violations. Constitution check PASSED.
 
@@ -53,8 +53,8 @@ No violations. Constitution check PASSED.
 
 ```text
 specs/002-auto-code-indexing/
-├── spec.md          # Spesifikasi fitur (/hakoagent.specify output)
-├── plan.md          # Rencana teknis (ini, /hakoagent.plan output)
+├── spec.md          # Feature specification (/hakoagent.specify output)
+├── plan.md          # Technical plan (this file, /hakoagent.plan output)
 ├── research.md      # Phase 0 output (/hakoagent.plan command)
 ├── data-model.md    # Phase 1 output (/hakoagent.plan command)
 ├── quickstart.md    # Phase 1 output (/hakoagent.plan command)
@@ -65,11 +65,11 @@ specs/002-auto-code-indexing/
 ### Source Code (repository root)
 
 ```text
-.hakoagent/                      # Directory data HakoAgent
-├── hakoagent.db                 # Database HakoDB (single file)
-├── skills/                      # Skill files dalam format Markdown
-├── sessions/                    # Export sesi (opsional)
-└── logs/                        # Log operasi (opsional)
+.hakoagent/                      # HakoAgent data directory
+├── hakoagent.db                 # HakoDB database (single file)
+├── skills/                      # Skill files in Markdown format
+├── sessions/                    # Session exports (optional)
+└── logs/                        # Operation logs (optional)
 
 hakoagent-core/                    # Rust crate (HakoDB binding + core logic)
 ├── Cargo.toml
@@ -107,13 +107,13 @@ hakoagent-core/                    # Rust crate (HakoDB binding + core logic)
                 └── vigilance.rs
 ```
 
-**Structure Decision**: Single project structure (DEFAULT) — Rust crate `hakoagent-core` sebagai inti, CLI sebagai crate terpisah. Auto indexer ditambahkan sebagai modul baru di `indexer/auto_indexer.rs` yang menggunakan background thread untuk scanning startup dan inkremental update.
+**Structure Decision**: Single project structure (DEFAULT) — the `hakoagent-core` Rust crate as the core, the CLI as a separate crate. The auto indexer is added as a new module at `indexer/auto_indexer.rs` that uses a background thread for startup scanning and incremental updates.
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-Tidak ada pelanggaran konstitusi. Kolom ini dikosongkan.
+No constitution violations. This section is left empty.
 
 ---
 
@@ -121,18 +121,18 @@ Tidak ada pelanggaran konstitusi. Kolom ini dikosongkan.
 
 ### Unknowns from Technical Context
 
-Tidak ada NEEDS CLARIFICATION yang tersisa. Semua parameter telah ditentukan melalui spec dan clarifikasi sebelumnya:
+No NEEDS CLARIFICATION items remain. All parameters were determined through the spec and prior clarifications:
 
-| Unknown | Status | Resolusi |
+| Unknown | Status | Resolution |
 |---------|--------|----------|
-| Mekanisme startup scanning | Resolved | Background thread dalam proses agen (Clarification Session 2026-10-29) |
-| Database belum ada vs sudah ada | Resolved | Full scan jika belum ada, verifikasi + update jika sudah ada (FR-001) |
+| Startup scanning mechanism | Resolved | Background thread within the agent process (Clarification Session 2026-10-29) |
+| Database not present vs. present | Resolved | Full scan if absent, verify + update if present (FR-001) |
 
 ### Research Findings (research.md)
 
-Tidak ada research task yang diperlukan karena semua unknown telah diresolusi. `research.md` dicatat sebagai "no unresolved clarifications".
+No research task is required because all unknowns have been resolved. `research.md` is recorded as "no unresolved clarifications".
 
-**Output**: `research.md` dengan catatan bahwa semua NEEDS CLARIFICATION telah diresolusi sebelumnya.
+**Output**: `research.md` noting that all NEEDS CLARIFICATION items were resolved previously.
 
 ---
 
@@ -140,11 +140,11 @@ Tidak ada research task yang diperlukan karena semua unknown telah diresolusi. `
 
 ### Data Model (`data-model.md`)
 
-Entitas yang diekstrak dari feature spec:
+Entities extracted from the feature spec:
 
-| Entitas | Atribut Utama | Hubungan |
+| Entity | Key Attributes | Relationships |
 |---------|--------------|----------|
-| CodeIndexEntry | entry_id, file_path, symbol_name, symbol_type, dependensi, line_number, last_indexed_at, file_hash | — |
+| CodeIndexEntry | entry_id, file_path, symbol_name, symbol_type, dependencies, line_number, last_indexed_at, file_hash | — |
 | FileChange | change_id, file_path, change_type (created/modified/deleted), timestamp, indexed_status | — |
 | IndexingRun | run_id, started_at, ended_at, files_processed, files_indexed, errors, status | — |
 
@@ -154,81 +154,81 @@ State transitions:
 - CodeIndexEntry: created → updated / deleted
 
 Validation rules:
-- CodeIndexEntry: file_hash harus unik per file_path, last_indexed_at harus diupdate saat perubahan
-- FileChange: change_type harus salah satu dari created/modified/deleted
-- IndexingRun: files_processed harus >= files_indexed
+- CodeIndexEntry: file_hash must be unique per file_path, last_indexed_at must be updated on change
+- FileChange: change_type must be one of created/modified/deleted
+- IndexingRun: files_processed must be >= files_indexed
 
 ### Interface Contracts (`contracts/`)
 
-HakoAgent mengekspos tool calling interface untuk auto indexing. Kontrak berikut didefinisikan:
+HakoAgent exposes a tool calling interface for auto indexing. The following contracts are defined:
 
 **File**: `contracts/auto-indexing-interface.md`
 
-| Tool | Parameter | Return |
+| Tool | Parameters | Return |
 |------|-----------|--------|
 | `hakoagent.index` | — | indexing_run_id, status |
 | `hakoagent.recall` | query, limit | context_results |
-| `hakoagent.events` | limit, session_id | events_list (termasuk indexing events) |
+| `hakoagent.events` | limit, session_id | events_list (including indexing events) |
 
-Auto indexing berjalan sebagai background thread, tidak memerlukan CLI command tambahan. CLI `hakoagent index` dapat dipanggil secara manual untuk memaksa re-index.
+Auto indexing runs as a background thread and requires no additional CLI command. The `hakoagent index` CLI can be invoked manually to force a re-index.
 
-Return value selalu dalam format JSON untuk kemudahan parsing oleh harness agent.
+Return values are always in JSON format for easy parsing by the harness agent.
 
 ### Quickstart Validation Guide (`quickstart.md`)
 
 **Prerequisites**:
-- Rust toolchain terinstal
-- Hak izin tulis di working directory proyek
-- Database HakoDB sudah diinisialisasi (`hakoagent init`)
+- Rust toolchain installed
+- Write permission in the project working directory
+- HakoDB database initialized (`hakoagent init`)
 
 **Setup commands**:
 ```bash
 # Build HakoAgent
 cargo build --release --manifest-path cli/Cargo.toml
 
-# Inisialisasi database
+# Initialize the database
 ./cli/target/release/hakoagent init --db ./.hakoagent/hakoagent.db --collections all
 ```
 
 **Test/run commands**:
 ```bash
-# Uji auto indexing saat startup
+# Test auto indexing at startup
 ./cli/target/release/hakoagent init --db ./.hakoagent/hakoagent.db --collections all
-# Background thread akan secara otomatis scan codebase
+# The background thread will automatically scan the codebase
 
-# Uji indexing inkremental
-# Ubah satu file source code, lalu tunggu notifikasi indexing
+# Test incremental indexing
+# Change one source code file, then wait for the indexing notification
 
-# Uji recall
+# Test recall
 ./cli/target/release/hakoagent recall "fungsi error handling"
 ```
 
 **Expected outcomes**:
-- `init`: Background thread memulai scanning codebase otomatis
-- File baru: Secara otomatis ditambahkan ke `code_index`
-- File diubah: Entri `code_index` diperbarui
-- File dihapus: Entri `code_index` dihapus
-- Notifikasi: Agen menerima ringkasan indexing setelah selesai
+- `init`: Background thread starts codebase scanning automatically
+- New file: Automatically added to `code_index`
+- File changed: `code_index` entry updated
+- File deleted: `code_index` entry removed
+- Notification: Agent receives an indexing summary after completion
 
 ### Re-evaluate Constitution Check (post-design)
 
-| Prinsip Konstitusi | Status Post-Design | Catatan |
+| Constitution Principle | Post-Design Status | Notes |
 |-------------------|-------------------|---------|
-| Smart Memory | Terpenuhi | Hasil indexing disimpan di `code_index` |
-| Anti-Lupa | Terpenuhi | code_index selalu up-to-date otomatis |
-| Kronologi & Histori | Terpenuhi | IndexingRun sebagai event append-only |
-| Consistency | Terpenuhi | Notifikasi indexing standar |
-| Cross-Model Consistency | Terpenuhi | Flow indexing sama untuk semua LLM |
-| Vigilance | Terpenuhi | Deteksi perubahan file otomatis |
-| Clear Target | Terpenuhi | Setiap indexing run punya target dan DoD |
-| Codebase Fluency | Terpenuhi | code_index menyimpan struktur kode |
-| Context Frugality | Terpenuhi | Inkremental mengurangi beban endpoint |
-| Self Skill Improvement | Terpenuhi | Pola indexing dapat diekstrak sebagai skill |
+| Smart Memory | Met | Indexing results stored in `code_index` |
+| Anti-Lupa | Met | code_index always up-to-date automatically |
+| Kronologi & Histori | Met | IndexingRun as an append-only event |
+| Consistency | Met | Standard indexing notification |
+| Cross-Model Consistency | Met | Same indexing flow for all LLMs |
+| Vigilance | Met | Automatic file change detection |
+| Clear Target | Met | Every indexing run has a target and DoD |
+| Codebase Fluency | Met | code_index stores code structure |
+| Context Frugality | Met | Incremental indexing reduces endpoint load |
+| Self Skill Improvement | Met | Indexing patterns can be extracted as skills |
 
 No violations. Constitution check PASSED post-design.
 
 ---
 
-**Design artifacts siap: `research.md`, `data-model.md`, `contracts/auto-indexing-interface.md`, `quickstart.md`**
+**Design artifacts ready: `research.md`, `data-model.md`, `contracts/auto-indexing-interface.md`, `quickstart.md`**
 
-Plan workflow selesai. Siap untuk dilanjutkan ke `/hakoagent-tasks`.
+Plan workflow complete. Ready to proceed to `/hakoagent-tasks`.

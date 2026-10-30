@@ -38,24 +38,24 @@
 - [X] T009 [P] Create `hakoagent-core/src/memory/mod.rs` module declaration
 - [X] T010 Create `hakoagent-core/src/memory/events.rs` — append-only event log with timestamp ISO 8601, application-level guard checking event_id before write (FR-004)
 - [X] T011 [P] Create `hakoagent-core/src/memory/sessions.rs` — session boundary (started_at, ended_at, status, model_used)
-- [X] T012 [P] Create `hakoagent-core/src/memory/decisions.rs` — keputusan arsitektur + alasan + konsekuensi + referensi event_id asal
-- [X] T013 [P] Create `hakoagent-core/src/memory/findings.rs` — temuan codebase, bug, pola, catatan error
-- [X] T014 [P] Create `hakoagent-core/src/memory/code_index.rs` — simbol, file, dependensi
-- [X] T015 [P] Create `hakoagent-core/src/memory/tasks.rs` — task dengan target + DoD (FR-006)
-- [X] T016 [P] Create `hakoagent-core/src/memory/context_cache.rs` — cache konteks ringkas
+- [X] T012 [P] Create `hakoagent-core/src/memory/decisions.rs` — architecture decisions + rationale + consequences + reference to the originating event_id
+- [X] T013 [P] Create `hakoagent-core/src/memory/findings.rs` — codebase findings, bugs, patterns, error notes
+- [X] T014 [P] Create `hakoagent-core/src/memory/code_index.rs` — symbols, files, dependencies
+- [X] T015 [P] Create `hakoagent-core/src/memory/tasks.rs` — task with target + DoD (FR-006)
+- [X] T016 [P] Create `hakoagent-core/src/memory/context_cache.rs` — concise context cache
 - [X] T017 [P] Create `hakoagent-core/src/memory/skills.rs` — skill data model (skill_id, name, description, context_tags, success_count, failure_count, status)
-- [X] T018 [P] Create `hakoagent-core/src/memory/lessons_learned.rs` — pelajaran dari kegagalan
+- [X] T018 [P] Create `hakoagent-core/src/memory/lessons_learned.rs` — lessons from failures
 - [X] T019 Create `cli/src/main.rs` — CLI entry point with subcommands: init, index, recall, skill, task, events, vigilance
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
 ---
 
-## Phase 3: User Story 1 - Tool Calling HakoAgent untuk Memori dan Skill (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - HakoAgent Tool Calling for Memory and Skills (Priority: P1) 🎯 MVP
 
-**Goal**: Agen AI dalam harness dapat memanggil tool HakoAgent untuk menyimpan event, mencari konteks, membuat task, dan mengelola skill melalui antarmuka yang konsisten dan terukur.
+**Goal**: The AI agent in the harness can call HakoAgent tools to save events, search context, create tasks, and manage skills through a consistent and measurable interface.
 
-**Independent Test**: Dapat diuji secara independen dengan memanggil setiap tool HakoAgent (init, recall, event_log, skill_add, task_create, dll.) dan memverifikasi bahwa file di `.hakoagent/` dibuat atau diperbarui dengan benar.
+**Independent Test**: Can be tested independently by calling each HakoAgent tool (init, recall, event_log, skill_add, task_create, etc.) and verifying that files under `.hakoagent/` are created or updated correctly.
 
 ### Implementation for User Story 1
 
@@ -76,17 +76,17 @@
 
 ---
 
-## Phase 4: User Story 2 - Skill dalam Format Markdown (Priority: P2)
+## Phase 4: User Story 2 - Skills in Markdown Format (Priority: P2)
 
-**Goal**: Setiap pola sukses atau pelajaran dari tugas disimpan sebagai file skill Markdown di `.hakoagent/skills/`, dapat dicari, dan di-reuse untuk tugas serupa di masa depan.
+**Goal**: Every success pattern or lesson learned from tasks is saved as a Markdown skill file under `.hakoagent/skills/`, searchable, and reusable for similar tasks in the future.
 
-**Independent Test**: Dapat diuji dengan membuat file skill Markdown, lalu mencarinya melalui `hakoagent.skill_list` atau `hakoagent.skill_get`, dan memverifikasi konten yang dikembalikan.
+**Independent Test**: Can be tested by creating a Markdown skill file, then finding it via `hakoagent.skill_list` or `hakoagent.skill_get`, and verifying the returned content.
 
 ### Implementation for User Story 2
 
 - [X] T032 [US2] Create `hakoagent-core/src/skill_engine/mod.rs` module declaration
-- [X] T033 [P] [US2] Implement `hakoagent-core/src/skill_engine/reflector.rs` — rifleksi pasca-tugas (apa berhasil, gagal, pola)
-- [X] T034 [P] [US2] Implement `hakoagent-core/src/skill_engine/extractor.rs` — ekstraksi pola sukses sebagai skill baru
+- [X] T033 [P] [US2] Implement `hakoagent-core/src/skill_engine/reflector.rs` — post-task reflection (what succeeded, failed, patterns)
+- [X] T034 [P] [US2] Implement `hakoagent-core/src/skill_engine/extractor.rs` — extraction of success patterns as new skills
 - [X] T035 [US2] Implement `hakoagent-core/src/skill_engine/registry.rs` — skill registry with success/failure counters
 - [X] T036 [US2] Implement skill file writer — save skill as Markdown file to `.hakoagent/skills/` with metadata header (skill_id, name, status, tags, success_count, failure_count) (FR-005, SC-004)
 - [X] T037 [US2] Implement `cli/src/main.rs` `hakoagent skill list` command — list all active skills from `.hakoagent/skills/`
@@ -98,17 +98,17 @@
 
 ---
 
-## Phase 5: User Story 3 - Task dengan Target dan DoD (Priority: P2)
+## Phase 5: User Story 3 - Task with Target and DoD (Priority: P2)
 
-**Goal**: Setiap tugas yang dikerjakan agen memiliki target dan Definition of Done yang dicatat di koleksi `tasks`, sehingga progres dapat diverifikasi dan konsisten lintas model LLM.
+**Goal**: Every task the agent works on has a target and Definition of Done recorded in the `tasks` collection, so progress can be verified and stays consistent across LLM models.
 
-**Independent Test**: Dapat diuji dengan membuat task baru via `hakoagent.task_create`, lalu memverifikasi via `hakoagent.task_list` bahwa target dan DoD tercatat dengan benar.
+**Independent Test**: Can be tested by creating a new task via `hakoagent.task_create`, then verifying via `hakoagent.task_list` that the target and DoD are recorded correctly.
 
 ### Implementation for User Story 3
 
 - [X] T041 [US3] Create `hakoagent-core/src/planner/mod.rs` module declaration
 - [X] T042 [P] [US3] Implement `hakoagent-core/src/planner/task.rs` — Task struct with target + definition_of_done (FR-006)
-- [X] T043 [P] [US3] Implement `hakoagent-core/src/planner/flow.rs` — standard 6-step flow: Ambil konteks → Rencanakan → Eksekusi → Verifikasi → Rifleksi → Simpan (Cross-Model Consistency)
+- [X] T043 [P] [US3] Implement `hakoagent-core/src/planner/flow.rs` — standard 6-step flow: Retrieve context → Plan → Execute → Verify → Reflect → Save (Cross-Model Consistency)
 - [X] T044 [US3] Implement `cli/src/main.rs` `hakoagent task list` command — list tasks from `tasks` collection
 - [X] T045 [US3] Implement `cli/src/main.rs` `hakoagent task create <title>` command — create task with target + DoD
 - [X] T046 [US3] Implement `cli/src/main.rs` `hakoagent task complete <id>` command — mark task complete with dod_verified
@@ -121,16 +121,16 @@
 
 ## Phase 6: User Story 4 - Vigilance Checker (Priority: P3)
 
-**Goal**: Vigilance Checker secara otomatis mendeteksi file yang diubah tapi tidak diuji, TODO yang belum disentuh, dan regresi terhadap prinsip konstitusi.
+**Goal**: The Vigilance Checker automatically detects files that were changed but not tested, untouched TODOs, and regressions against constitution principles.
 
-**Independent Test**: Dapat diuji dengan menjalankan `hakoagent.vigilance` pada direktori proyek dan memverifikasi laporan yang dihasilkan.
+**Independent Test**: Can be tested by running `hakoagent.vigilance` on the project directory and verifying the generated report.
 
 ### Implementation for User Story 4
 
 - [X] T049 [US4] Create `hakoagent-core/src/vigilance/mod.rs` module declaration
-- [X] T050 [P] [US4] Implement `hakoagent-core/src/vigilance/unused_file.rs` — deteksi file yang diubah tapi tidak diuji (FR-008)
-- [X] T051 [P] [US4] Implement `hakoagent-core/src/vigilance/todo_detector.rs` — deteksi TODO yang belum disentuh (FR-008)
-- [X] T052 [US4] Implement `hakoagent-core/src/vigilance/regression.rs` — deteksi regresi terhadap prinsip konstitusi (FR-008)
+- [X] T050 [P] [US4] Implement `hakoagent-core/src/vigilance/unused_file.rs` — detect files changed but not tested (FR-008)
+- [X] T051 [P] [US4] Implement `hakoagent-core/src/vigilance/todo_detector.rs` — detect untouched TODOs (FR-008)
+- [X] T052 [US4] Implement `hakoagent-core/src/vigilance/regression.rs` — detect regressions against constitution principles (FR-008)
 - [X] T053 [US4] Implement `cli/src/main.rs` `hakoagent vigilance` command — run all vigilance checks
 - [X] T054 [US4] Integration test: run vigilance on test repository, verify unused files, TODO items, and constitution regression detected
 
@@ -232,4 +232,4 @@ With multiple developers:
 
 ---
 
-**Tasks siap untuk diimplementasikan. Lanjut ke `/hakoagent-implement`.**
+**Tasks ready for implementation. Proceed to `/hakoagent-implement`.**

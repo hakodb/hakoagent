@@ -6,37 +6,37 @@
 
 ## Unknowns Resolution
 
-Tidak ada NEEDS CLARIFICATION yang tersisa. Semua parameter telah ditentukan melalui spec dan clarifikasi sebelumnya:
+No NEEDS CLARIFICATION items remain. All parameters were determined through the spec and prior clarifications:
 
-| Unknown | Resolusi | Sumber |
+| Unknown | Resolution | Source |
 |---------|----------|--------|
-| Default TTL untuk cache konteks | 300 detik (5 menit) | Clarification Session 2026-10-29 |
+| Default TTL for the context cache | 300 seconds (5 minutes) | Clarification Session 2026-10-29 |
 
 ## Technology Choices
 
 | Decision | Rationale | Alternatives Considered |
 |----------|-----------|------------------------|
-| Python 3 (stdlib only) sebagai bahasa implementasi | Tidak ada build step, mudah dipelihara, kompatibel dengan ctypes FFI ke HakoDB | Rust (memerlukan cargo build, toolchain eksternal) |
-| Prebuilt HakoDB shared library (`libhakodb-...so`) via ctypes | Library asli HakoDB digunakan langsung, header `hakodb.h` sebagai referensi ABI | Build dari sumber dengan Rust/cargo (memerlukan toolchain Rust) |
-| HakoDB embedded (via prebuilt .so) | Footprint ringan, tidak perlu server/daemon, cocok untuk in-process agent | SQLite (tidak ada dukungan vektor/graph native), PostgreSQL (butuh server) |
-| LRU eviction untuk cache | Standar untuk cache management, efisien memori | FIFO (lebih sederhana tapi kurang optimal), LFU (lebih kompleks) |
-| BFS untuk graph traversal | Cocok untuk eksplorasi dependensi level-by-level | DFS (lebih dalam tapi bisa terjebak dalam cabang yang salah) |
-| Dijkstra untuk shortest path | Standar untuk weighted shortest path | BFS (hanya untuk unweighted), A* (perlu heuristic) |
-| Manual indexing (`hakoagent index`) | Sederhana, tidak perlu manajemen proses tambahan | Background thread / file watcher (memerlukan manajemen proses, lebih kompleks) |
+| Python 3 (stdlib only) as the implementation language | No build step, easy to maintain, compatible with ctypes FFI to HakoDB | Rust (requires cargo build, external toolchain) |
+| Prebuilt HakoDB shared library (`libhakodb-...so`) via ctypes | The native HakoDB library is used directly, `hakodb.h` as the ABI reference | Build from source with Rust/cargo (requires a Rust toolchain) |
+| HakoDB embedded (via prebuilt .so) | Light footprint, no server/daemon needed, suits an in-process agent | SQLite (no native vector/graph support), PostgreSQL (requires a server) |
+| LRU eviction for the cache | Standard for cache management, memory efficient | FIFO (simpler but less optimal), LFU (more complex) |
+| BFS for graph traversal | Fits level-by-level dependency exploration | DFS (goes deeper but can get stuck in the wrong branch) |
+| Dijkstra for shortest path | Standard for weighted shortest path | BFS (only for unweighted), A* (needs a heuristic) |
+| Manual indexing (`hakoagent index`) | Simple, no extra process management | Background thread / file watcher (requires process management, more complex) |
 
 ## Integration Patterns
 
-- **FFI via ctypes**: Memuat `libhakodb-...so` dan memanggil fungsi C ABI seperti `hk_engine_insert_json`, `hk_engine_get_json`, `hk_engine_delete`
-- **Header referensi**: `lib/hakodb.h` (v0.20.0, hash-verified) sebagai sumber kebenaran untuk tanda tangan fungsi C
-- **HakoDB integration**: Memory Service untuk baca/tulis koleksi `context_cache`, `code_index` melalui FFI atau JSON file
-- **CLI integration**: `./hakoagent init` untuk inisialisasi database, `./hakoagent index` untuk scanning codebase
+- **FFI via ctypes**: Load `libhakodb-...so` and call C ABI functions such as `hk_engine_insert_json`, `hk_engine_get_json`, `hk_engine_delete`
+- **Header reference**: `lib/hakodb.h` (v0.20.0, hash-verified) as the source of truth for C function signatures
+- **HakoDB integration**: Memory Service for read/write of the `context_cache` and `code_index` collections via FFI or JSON files
+- **CLI integration**: `./hakoagent init` to initialize the database, `./hakoagent index` to scan the codebase
 
 ## Best Practices
 
-- Setiap file yang diindex dicatat sebagai event append-only di koleksi `events`
-- File hash digunakan untuk mendeteksi perubahan (hindari re-index file yang sama)
-- Direktori yang diabaikan: node_modules, .git, target, .hakoagent, build output
-- Error pada satu file tidak menghentikan indexing file lainnya
-- Notifikasi ringkas dikirim ke agen setelah setiap sesi indexing selesai
-- Cache TTL 300 detik untuk keseimbangan antara freshness dan pengurangan panggilan LLM
-- Graph traversal dengan visited set untuk menghindari siklus tak terbatas
+- Every indexed file is recorded as an append-only event in the `events` collection
+- File hashes are used to detect changes (avoid re-indexing the same file)
+- Ignored directories: node_modules, .git, target, .hakoagent, build output
+- An error on one file does not stop indexing of other files
+- A concise notification is sent to the agent after every indexing session finishes
+- Cache TTL of 300 seconds to balance freshness against reduced LLM calls
+- Graph traversal with a visited set to avoid unbounded cycles

@@ -6,30 +6,30 @@
 
 ## Overview
 
-HakoAgent mengekspos antarmuka tool calling untuk harness agent (OpenCode dan sejenisnya). Setiap tool memiliki nama yang diawali dengan `hakoagent.`, parameter yang terdefinisi dengan jelas, dan nilai kembali dalam format JSON untuk kemudahan parsing oleh agen.
+HakoAgent exposes a tool calling interface for harness agents (OpenCode and similar). Each tool has a name prefixed with `hakoagent.`, clearly defined parameters, and a return value in JSON format for easy parsing by the agent.
 
 ## Tool List
 
-| Tool | Deskripsi | Parameter Utama | Return |
+| Tool | Description | Main Parameters | Return |
 |------|-----------|-----------------|--------|
-| `hakoagent.init` | Inisialisasi database HakoDB dan semua koleksi | `db_path` (string), `collections` (array of string) | `status` (string), `collections_created` (array) |
-| `hakoagent.index` | Scan dan index codebase ke `code_index` | `root_path` (string) | `indexed_count` (integer) |
-| `hakoagent.recall` | Ambil konteks dari memori (HNSW + FTS) | `query` (string), `limit` (integer) | `context_results` (array) |
-| `hakoagent.skill_list` | Lihat semua skill aktif dari `.hakoagent/skills/` | — | `skills_list` (array) |
-| `hakoagent.skill_add` | Tambah skill baru dalam format Markdown | `name` (string), `content` (string) | `skill_id` (string), `status` (string) |
-| `hakoagent.skill_get` | Ambil detail skill tertentu | `skill_id` (string) atau `name` (string) | `skill_content` (string, Markdown) |
-| `hakoagent.task_list` | Lihat tugas dan status dari koleksi `tasks` | — | `tasks_list` (array) |
-| `hakoagent.task_create` | Buat task baru dengan target + DoD | `title` (string), `target` (string), `definition_of_done` (string), `priority` (string) | `task_id` (string), `status` (string) |
-| `hakoagent.task_complete` | Tandai task selesai dengan verifikasi DoD | `task_id` (string), `dod_verified` (boolean) | `status` (string), `completed_at` (string) |
-| `hakoagent.events` | Lihat histori kronologis dari koleksi `events` | `limit` (integer), `session_id` (string) | `events_list` (array) |
-| `hakoagent.event_log` | Catat tindakan baru ke koleksi `events` (append-only) | `action` (string), `target` (string), `actor` (string), `metadata` (JSON) | `event_id` (string), `timestamp` (string) |
-| `hakoagent.vigilance` | Deteksi file terlupakan, regresi, TODO | `root_path` (string) | `vigilance_report` (object) |
-| `hakoagent.finding_save` | Simpan temuan ke koleksi `findings` | `content` (string), `finding_type` (string), `file` (string) | `finding_id` (string) |
-| `hakoagent.decision_save` | Simpan keputusan ke koleksi `decisions` | `title` (string), `rationale` (string), `consequences` (string) | `decision_id` (string) |
+| `hakoagent.init` | Initialize the HakoDB database and all collections | `db_path` (string), `collections` (array of string) | `status` (string), `collections_created` (array) |
+| `hakoagent.index` | Scan and index the codebase into `code_index` | `root_path` (string) | `indexed_count` (integer) |
+| `hakoagent.recall` | Retrieve context from memory (HNSW + FTS) | `query` (string), `limit` (integer) | `context_results` (array) |
+| `hakoagent.skill_list` | List all active skills from `.hakoagent/skills/` | — | `skills_list` (array) |
+| `hakoagent.skill_add` | Add a new skill in Markdown format | `name` (string), `content` (string) | `skill_id` (string), `status` (string) |
+| `hakoagent.skill_get` | Retrieve details of a specific skill | `skill_id` (string) or `name` (string) | `skill_content` (string, Markdown) |
+| `hakoagent.task_list` | View tasks and statuses from the `tasks` collection | — | `tasks_list` (array) |
+| `hakoagent.task_create` | Create a new task with target + DoD | `title` (string), `target` (string), `definition_of_done` (string), `priority` (string) | `task_id` (string), `status` (string) |
+| `hakoagent.task_complete` | Mark a task complete with DoD verification | `task_id` (string), `dod_verified` (boolean) | `status` (string), `completed_at` (string) |
+| `hakoagent.events` | View chronological history from the `events` collection | `limit` (integer), `session_id` (string) | `events_list` (array) |
+| `hakoagent.event_log` | Record a new action to the `events` collection (append-only) | `action` (string), `target` (string), `actor` (string), `metadata` (JSON) | `event_id` (string), `timestamp` (string) |
+| `hakoagent.vigilance` | Detect overlooked files, regressions, TODOs | `root_path` (string) | `vigilance_report` (object) |
+| `hakoagent.finding_save` | Save a finding to the `findings` collection | `content` (string), `finding_type` (string), `file` (string) | `finding_id` (string) |
+| `hakoagent.decision_save` | Save a decision to the `decisions` collection | `title` (string), `rationale` (string), `consequences` (string) | `decision_id` (string) |
 
 ## Response Format
 
-Semua respons dalam format JSON:
+All responses are in JSON format:
 
 ```json
 {
@@ -39,7 +39,7 @@ Semua respons dalam format JSON:
 }
 ```
 
-Contoh respons sukses:
+Example success response:
 ```json
 {
   "status": "success",
@@ -48,7 +48,7 @@ Contoh respons sukses:
 }
 ```
 
-Contoh respons error:
+Example error response:
 ```json
 {
   "status": "error",
@@ -59,27 +59,27 @@ Contoh respons error:
 
 ## Integration Notes
 
-- Nama tool diawali dengan `hakoagent.` untuk menghindari konflik dengan tool lain di harness agent.
-- Parameter harus diverifikasi tipe sebelum dieksekusi.
-- Return value selalu terstruktur JSON agar mudah di-parse oleh agen AI.
-- Semua operasi bersifat idempotent kecuali `event_log` (append-only, tidak dapat diulang dengan event_id yang sama).
+- Tool names are prefixed with `hakoagent.` to avoid conflicts with other tools in the harness agent.
+- Parameters must be type-verified before execution.
+- Return values are always structured JSON so the AI agent can easily parse them.
+- All operations are idempotent except `event_log` (append-only, cannot be repeated with the same event_id).
 
 ## Integration Example (Pseudocode)
 
 ```python
-# Sebelum mulai tugas
+# Before starting a task
 context = hakoagent.recall(query="bagaimana implementasi error handling Rust?", limit=5)
 skills = hakoagent.skill_list()
 
-# Selama bekerja - catat setiap tindakan
+# While working - record every action
 hakoagent.event_log(action="code_read", target="src/main.rs", actor="agent")
 
-# Simpan temuan
+# Save findings
 hakoagent.finding_save(content="Polanya menggunakan Result<T, E>", finding_type="pattern", file="src/main.rs")
 
-# Setelah selesai tugas - ekstraksi skill
+# After the task is done - skill extraction
 hakoagent.skill_add(name="rust_error_handling", content="...markdown content...")
 
-# Tandai task selesai
+# Mark the task complete
 hakoagent.task_complete(task_id="task_001", dod_verified=True)
 ```

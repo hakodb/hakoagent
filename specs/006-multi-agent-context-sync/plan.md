@@ -32,23 +32,23 @@ Extend the Python-only HakoAgent to be a full agent memory, context, and history
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-| Prinsip Konstitusi | Status | Catatan |
-|-------------------|--------|---------|
-| Smart Memory | Terpenuhi | Sessions, events, decisions, findings, tasks, skills collections via FFI |
-| Anti-Lupa | Terpenuhi | Query findings + skills via recall before new tasks |
-| Kronologi & Histori | Terpenuhi | Append-only events with ISO 8601 timestamps, event_id uniqueness guard |
-| Consistency | Terpenuhi | Template output, naming, error handling consistent across agents |
-| Cross-Model Consistency | Terpenuhi | Flow identical regardless of LLM model |
-| Vigilance | Terpenuhi | Existing vigilance checker detects regressions, TODO, unused files |
-| Clear Target | Terpenuhi | Task with target + DoD |
-| Codebase Fluency | Terpenuhi | Code_index collection + indexer |
-| Context Frugality | Terpenuhi | Context cache TTL + recall with vector search |
-| Self Skill Improvement | Terpenuhi | Skills collection + skill engine |
-| Python Only | Terpenuhi | No Rust/Cargo/build; stdlib only |
-| Real Hakodb FFI | Terpenuhi | libhakodb .so + hakodb.h via ctypes |
-| Code Quality | Terpenuhi | Clean Python, no bare except, no hardcoded secrets |
-| Testing | Terpenuhi | Unit tests for all new FFI functions |
-| Maintainability | Terpenuhi | Docs updated with code, no stale Rust references |
+| Constitution Principle | Status | Notes |
+|-----------------------|--------|-------|
+| Smart Memory | Met | Sessions, events, decisions, findings, tasks, skills collections via FFI |
+| Anti-Lupa | Met | Query findings + skills via recall before new tasks |
+| Chronology & History | Met | Append-only events with ISO 8601 timestamps, event_id uniqueness guard |
+| Consistency | Met | Template output, naming, error handling consistent across agents |
+| Cross-Model Consistency | Met | Flow identical regardless of LLM model |
+| Vigilance | Met | Existing vigilance checker detects regressions, TODO, unused files |
+| Clear Target | Met | Task with target + DoD |
+| Codebase Fluency | Met | Code_index collection + indexer |
+| Context Frugality | Met | Context cache TTL + recall with vector search |
+| Self Skill Improvement | Met | Skills collection + skill engine |
+| Python Only | Met | No Rust/Cargo/build; stdlib only |
+| Real Hakodb FFI | Met | libhakodb .so + hakodb.h via ctypes |
+| Code Quality | Met | Clean Python, no bare except, no hardcoded secrets |
+| Testing | Met | Unit tests for all new FFI functions |
+| Maintainability | Met | Docs updated with code, no stale Rust references |
 
 No violations. Constitution check PASSED.
 
@@ -99,7 +99,7 @@ AGENTS.md                      # Agent-facing instructions
 
 ### Unknowns from Technical Context
 
-| Unknown | Status | Resolusi |
+| Unknown | Status | Resolution |
 |---------|--------|----------|
 | HakoDB FFI function signatures confirmed against real .so | Resolved | Verified `hk_engine_insert_json`, `hk_engine_get_json`, `hk_engine_delete`, `hk_engine_open`, `hk_engine_free`, `hk_string_free` export symbols |
 | Multi-agent sync mechanism | Resolved | Shared filesystem HakoDB + `actor` attribution field; no network server needed |
@@ -209,23 +209,23 @@ python3 test_hakoagent.py
 
 ### Re-evaluate Constitution Check (post-design)
 
-| Prinsip Konstitusi | Status Post-Design | Catatan |
-|-------------------|-------------------|---------|
-| Smart Memory | Terpenuhi | 9 collections via FFI + JSON fallback |
-| Anti-Lupa | Terpenuhi | Recall queries findings + skills |
-| Kronologi & Histori | Terpenuhi | Append-only events with event_id guard |
-| Consistency | Terpenuhi | JSON return format, standard tool names |
-| Cross-Model Consistency | Terpenuhi | Same flow for all LLM models |
-| Vigilance | Terpenuhi | Existing vigilance checker |
-| Clear Target | Terpenuhi | Task with target + DoD |
-| Codebase Fluency | Terpenuhi | Code_index + graph traversal |
-| Context Frugality | Terpenuhi | Context cache TTL + recall |
-| Self Skill Improvement | Terpenuhi | Skills + lessons_learned |
-| Python Only | Terpenuhi | stdlib only, no Rust/Cargo |
-| Real Hakodb FFI | Terpenuhi | ctypes to libhakodb .so |
-| Code Quality | Terpenuhi | No bare except, no hardcoded secrets |
-| Testing | Terpenuhi | 31+ tests passing |
-| Maintainability | Terpenuhi | Docs current, no stale references |
+| Constitution Principle | Status Post-Design | Notes |
+|-----------------------|-------------------|-------|
+| Smart Memory | Met | 9 collections via FFI + JSON fallback |
+| Anti-Lupa | Met | Recall queries findings + skills |
+| Chronology & History | Met | Append-only events with event_id guard |
+| Consistency | Met | JSON return format, standard tool names |
+| Cross-Model Consistency | Met | Same flow for all LLM models |
+| Vigilance | Met | Existing vigilance checker |
+| Clear Target | Met | Task with target + DoD |
+| Codebase Fluency | Met | Code_index + graph traversal |
+| Context Frugality | Met | Context cache TTL + recall |
+| Self Skill Improvement | Met | Skills + lessons_learned |
+| Python Only | Met | stdlib only, no Rust/Cargo |
+| Real Hakodb FFI | Met | ctypes to libhakodb .so |
+| Code Quality | Met | No bare except, no hardcoded secrets |
+| Testing | Met | 31+ tests passing |
+| Maintainability | Met | Docs current, no stale references |
 
 No violations. Constitution check PASSED post-design.
 

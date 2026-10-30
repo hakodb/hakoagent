@@ -6,34 +6,34 @@
 
 ## Unknowns Resolution
 
-Tidak ada NEEDS CLARIFICATION yang tersisa. Semua parameter telah diresolusi melalui spec dan clarifikasi sebelumnya:
+No NEEDS CLARIFICATION items remain. All parameters were resolved through the spec and prior clarifications:
 
-| Unknown | Resolusi | Sumber |
+| Unknown | Resolution | Source |
 |---------|----------|--------|
-| Mekanisme startup scanning | Background thread dalam proses agen (tidak proses terpisah) | Clarification Session 2026-10-29 |
-| Database belum ada vs sudah ada | Full scan jika belum ada, verifikasi + update jika sudah ada | Spec FR-001 |
+| Startup scanning mechanism | Background thread within the agent process (not a separate process) | Clarification Session 2026-10-29 |
+| Database not present vs. present | Full scan if absent, verify + update if present | Spec FR-001 |
 
 ## Technology Choices
 
 | Decision | Rationale | Alternatives Considered |
 |----------|-----------|------------------------|
-| Rust 1.75+ sebagai bahasa core | HakoDB ditulis Rust, kompatibilitas FFI alami, performa tinggi | Python (lebih lambat untuk file system watcher) |
-| notify crate untuk file system watching | Cross-platform (Linux inotify, macOS FSEvents, Windows ReadDirectoryChangesW), mature | Custom polling (lebih banyak resource), platform-specific API (tidak portable) |
-| walkdir untuk directory traversal | Rekursif, bisa filter direktori, mature di Rust ecosystem | Manual recursion (rentan error), std::fs::read_dir (tidak rekursif) |
-| HakoDB embedded (`--no-default-features`) | Footprint ringan, tidak perlu server/daemon, cocok untuk in-process agent | SQLite (tidak ada dukungan vektor/graph native), PostgreSQL (butuh server) |
-| Background thread dalam proses agen | Sederhana, tidak perlu manajemen proses tambahan, berbagi memori dengan agen | Subprocess terpisah (memerlukan IPC, lebih kompleks) |
+| Rust 1.75+ as the core language | HakoDB is written in Rust, natural FFI compatibility, high performance | Python (slower for a file system watcher) |
+| notify crate for file system watching | Cross-platform (Linux inotify, macOS FSEvents, Windows ReadDirectoryChangesW), mature | Custom polling (more resources), platform-specific API (not portable) |
+| walkdir for directory traversal | Recursive, can filter directories, mature in the Rust ecosystem | Manual recursion (error-prone), std::fs::read_dir (not recursive) |
+| HakoDB embedded (`--no-default-features`) | Light footprint, no server/daemon needed, suits an in-process agent | SQLite (no native vector/graph support), PostgreSQL (requires a server) |
+| Background thread within the agent process | Simple, no extra process management, shares memory with the agent | Separate subprocess (requires IPC, more complex) |
 
 ## Integration Patterns
 
-- **File system watching**: notify crate memantau perubahan file secara real-time
-- **Background thread**: std::thread::spawn untuk scanning startup dan watcher loop
-- **HakoDB integration**: Memory Service untuk baca/tulis koleksi `code_index`
-- **CLI integration**: `hakoagent init` memulai background thread otomatis
+- **File system watching**: notify crate monitors file changes in real time
+- **Background thread**: std::thread::spawn for startup scanning and the watcher loop
+- **HakoDB integration**: Memory Service for read/write of the `code_index` collection
+- **CLI integration**: `hakoagent init` starts the background thread automatically
 
 ## Best Practices
 
-- Setiap file yang diindex dicatat sebagai event append-only di koleksi `events`
-- File hash digunakan untuk mendeteksi perubahan (hindari re-index file yang sama)
-- Direktori yang diabaikan: node_modules, .git, target, .hakoagent, build output
-- Error pada satu file tidak menghentikan indexing file lainnya
-- Notifikasi ringkas dikirim ke agen setelah setiap sesi indexing selesai
+- Every indexed file is recorded as an append-only event in the `events` collection
+- File hashes are used to detect changes (avoid re-indexing the same file)
+- Ignored directories: node_modules, .git, target, .hakoagent, build output
+- An error on one file does not stop indexing of other files
+- A concise notification is sent to the agent after every indexing session finishes

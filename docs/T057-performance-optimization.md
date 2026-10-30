@@ -23,8 +23,8 @@ python3 test_hakoagent.py
 
 - Context retrieval < X seconds per query (X defined in constitution metrics)
 - All 31 tests passing
-- Cache hit ratio ≥ 50% untuk query yang sering diulang
-- Waktu respons cache hit < 100ms
+- Cache hit ratio ≥ 50% for frequently repeated queries
+- Cache-hit response time < 100ms
 
 ## Results
 

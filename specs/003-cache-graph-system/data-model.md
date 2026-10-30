@@ -1,4 +1,4 @@
-# Data Model — System Caching dan Graph Traversal
+# Data Model — System Caching and Graph Traversal
 
 **Feature**: 003-cache-graph-system  
 **Date**: 2026-10-29  
@@ -8,87 +8,87 @@
 
 ### CacheEntry
 
-Entri cache yang disimpan di koleksi `context_cache` HakoDB.
+A cache entry stored in the `context_cache` collection of HakoDB.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| cache_key | string | Kunci cache unik (hash dari query) | Harus unik |
-| query | string | Query asli yang dicari | Tidak boleh kosong |
-| summary | string | Rangkuman hasil pencarian | Tidak boleh kosong |
-| source_documents | array of string | Daftar dokumen sumber yang digunakan | Harus berupa array |
-| created_at | string (ISO 8601) | Waktu entri dibuat | Format ISO 8601 |
-| ttl_seconds | u64 | Waktu kedaluwarsa dalam detik | Harus > 0 |
-| hit_count | u64 | Jumlah kali cache diakses | Default 0 |
+| cache_key | string | Unique cache key (hash of the query) | Must be unique |
+| query | string | The original query being searched | Must not be empty |
+| summary | string | Summary of search results | Must not be empty |
+| source_documents | array of string | List of source documents used | Must be an array |
+| created_at | string (ISO 8601) | When the entry was created | ISO 8601 format |
+| ttl_seconds | u64 | Expiration time in seconds | Must be > 0 |
+| hit_count | u64 | Number of times the cache was accessed | Default 0 |
 
-**Constraint**: cache_key harus unik. Jika query sama dengan cache yang ada, hit_count ditambahkan.
+**Constraint**: cache_key must be unique. If the query matches an existing cache entry, hit_count is incremented.
 
 ### GraphNode
 
-Node dalam graph codebase yang disimpan di koleksi `code_index`.
+A node in the codebase graph stored in the `code_index` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| node_id | string | ID unik node | Harus unik |
-| node_type | string | Tipe node (file/function/class/trait) | Tidak boleh kosong |
-| file_path | string | Path file relatif dari root proyek | Tidak boleh kosong |
-| symbol_name | string | Nama simbol (fungsi, class, struct, dll.) | Tidak boleh kosong |
+| node_id | string | Unique node ID | Must be unique |
+| node_type | string | Node type (file/function/class/trait) | Must not be empty |
+| file_path | string | File path relative to the project root | Must not be empty |
+| symbol_name | string | Symbol name (function, class, struct, etc.) | Must not be empty |
 
 ### GraphEdge
 
-Edge dalam graph yang mewakili hubungan antar node.
+An edge in the graph representing a relationship between nodes.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| edge_id | string | ID unik edge | Harus unik |
-| from_node | string | ID node asal | Harus ada di GraphNode |
-| to_node | string | ID node tujuan | Harus ada di GraphNode |
-| edge_type | string | Tipe edge (import/call/depends_on) | Tidak boleh kosong |
-| weight | f64 | Bobot edge (default 1.0) | Harus > 0 |
+| edge_id | string | Unique edge ID | Must be unique |
+| from_node | string | Source node ID | Must exist in GraphNode |
+| to_node | string | Destination node ID | Must exist in GraphNode |
+| edge_type | string | Edge type (import/call/depends_on) | Must not be empty |
+| weight | f64 | Edge weight (default 1.0) | Must be > 0 |
 
 ### GraphTraversalResult
 
-Hasil traversal yang disimpan di koleksi events.
+A traversal result stored in the events collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| traversal_id | string | ID unik traversal | Harus unik |
-| start_node | string | Node awal traversal | Harus ada di GraphNode |
-| visited_nodes | array of string | Daftar node yang dikunjungi | Harus berupa array |
-| edges_traversed | array of string | Daftar edge yang dilalui | Harus berupa array |
-| timestamp | string (ISO 8601) | Waktu traversal dilakukan | Format ISO 8601 |
-| status | string | Status (started/completed/failed) | Harus salah satu dari nilai yang valid |
+| traversal_id | string | Unique traversal ID | Must be unique |
+| start_node | string | Starting node of the traversal | Must exist in GraphNode |
+| visited_nodes | array of string | List of visited nodes | Must be an array |
+| edges_traversed | array of string | List of edges traversed | Must be an array |
+| timestamp | string (ISO 8601) | When the traversal was performed | ISO 8601 format |
+| status | string | Status (started/completed/failed) | Must be one of the valid values |
 
 ### CacheStats
 
-Statistik cache yang disimpan di koleksi `context_cache`.
+Cache statistics stored in the `context_cache` collection.
 
 | Field | Type | Description | Validation |
 |-------|------|-------------|------------|
-| total_hits | u64 | Jumlah cache hit | Default 0 |
-| total_misses | u64 | Jumlah cache miss | Default 0 |
-| eviction_count | u64 | Jumlah entri yang di-evict (LRU) | Default 0 |
-| cache_size | u64 | Jumlah entri saat ini | Harus >= 0 |
+| total_hits | u64 | Number of cache hits | Default 0 |
+| total_misses | u64 | Number of cache misses | Default 0 |
+| eviction_count | u64 | Number of evicted entries (LRU) | Default 0 |
+| cache_size | u64 | Current number of entries | Must be >= 0 |
 
 ## Relationships
 
-- GraphNode 1:N GraphEdge (satu node dapat memiliki banyak edge keluar)
-- GraphEdge N:1 GraphNode (satu edge terhubung ke dua node)
-- CacheEntry 1:N event (satu entri cache dapat menghasilkan banyak event hit/miss)
+- GraphNode 1:N GraphEdge (a node can have many outgoing edges)
+- GraphEdge N:1 GraphNode (an edge connects two nodes)
+- CacheEntry 1:N event (one cache entry can produce many hit/miss events)
 
 ## Validation Rules
 
-1. **Cache key uniqueness**: cache_key harus unik per query. Jika query sama dengan cache yang ada, hit_count ditambahkan dan last_accessed diupdate.
-2. **TTL validation**: ttl_seconds harus > 0. Jika TTL habis, entri dianggap expired dan harus di-requery ke endpoint LLM.
-3. **Edge validity**: from_node dan to_node harus ada di GraphNode sebelum edge dibuat.
-4. **Graph cycle prevention**: Traversal harus menggunakan visited set untuk menghindari loop tak terbatas.
-5. **Required fields**: Semua field yang tidak boleh kosong harus diisi saat create.
+1. **Cache key uniqueness**: cache_key must be unique per query. If the query matches an existing cache entry, hit_count is incremented and last_accessed is updated.
+2. **TTL validation**: ttl_seconds must be > 0. If the TTL elapses, the entry is considered expired and must be re-queried to the LLM endpoint.
+3. **Edge validity**: from_node and to_node must exist in GraphNode before an edge is created.
+4. **Graph cycle prevention**: Traversal must use a visited set to avoid infinite loops.
+5. **Required fields**: All fields that must not be empty must be filled at create time.
 
 ## State Transitions
 
 | Entity | From | To | Condition |
 |--------|------|-----|-----------|
-| CacheEntry | created | hit | Cache diakses kembali (hit_count ditambah) |
-| CacheEntry | created | expired | TTL habis, entri tidak valid lagi |
-| CacheEntry | created | evicted | Cache penuh, entri terlama di-hapus (LRU) |
-| GraphTraversalResult | started | completed | Semua node dalam depth maksimum telah dijelajahi |
-| GraphTraversalResult | started | failed | Error saat traversal (misalnya: start_node tidak ditemukan) |
+| CacheEntry | created | hit | Cache accessed again (hit_count incremented) |
+| CacheEntry | created | expired | TTL elapsed, entry no longer valid |
+| CacheEntry | created | evicted | Cache full, oldest entry removed (LRU) |
+| GraphTraversalResult | started | completed | All nodes within the maximum depth explored |
+| GraphTraversalResult | started | failed | Error during traversal (e.g.: start_node not found) |

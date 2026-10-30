@@ -108,7 +108,7 @@ python3 test_hakoagent.py
 
 ## Expected Outcomes (Success Criteria)
 
-| SC | Target | Hasil yang Diharapkan |
+| SC | Target | Expected Outcome |
 |----|--------|----------------------|
 | SC-001 | Single-agent write/read < 1s | `event_log` + `recall` completes in < 1 second |
 | SC-002 | Multi-agent document sharing | Agent-A writes, Agent-B reads same doc |
@@ -120,7 +120,7 @@ python3 test_hakoagent.py
 
 ## References
 
-- Spesifikasi fitur: `spec.md`
-- Rencana implementasi: `plan.md`
-- Kontrak antarmuka: `contracts/multi-agent-context-interface.md`
-- Konstitusi: `.specify/memory/constitution.md`
+- Feature specification: `spec.md`
+- Implementation plan: `plan.md`
+- Interface contract: `contracts/multi-agent-context-interface.md`
+- Constitution: `.specify/memory/constitution.md`

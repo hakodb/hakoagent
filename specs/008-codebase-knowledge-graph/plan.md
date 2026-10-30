@@ -38,23 +38,23 @@ Extend hakoagent's existing basic graph (US4) into a full codebase knowledge gra
 
 ## Constitution Check
 
-| Prinsip Konstitusi | Status | Catatan |
+| Constitution Principle | Status | Notes |
 |-------------------|--------|---------|
-| Smart Memory | Terpenuhi | CodeNode + CodeEdge entities via hakodb FFI |
-| Anti-Lupa | Terpenuhi | Graph search + recall before structural changes |
-| Kronologi & Histori | Terpenuhi | Trace entries + ADR history immutable |
-| Consistency | Terpenuhi | JSON return format, standard tool names |
-| Cross-Model Consistency | Terpenuhi | Same flow for all LLM models |
-| Vigilance | Terpenuhi | detect_changes + coverage detection |
-| Clear Target | Terpenuhi | Graph queries with clear targets |
-| Codebase Fluency | Terpenuhi | Rich edge types + Cypher + architecture |
-| Context Frugality | Terpenuhi | Graph queries reduce code exploration LLM calls |
-| Self Skill Improvement | Terpenuhi | ADR + trace ingestion for architectural learning |
-| Python Only | Terpenuhi | No MCP, no Rust/Cargo/build; stdlib only |
-| Real Hakodb FFI | Terpenuhi | ctypes to libhakodb .so |
-| Code Quality | Terpenuhi | Clean Python, no bare except, no hardcoded secrets |
-| Testing | Terpenuhi | Unit tests for all new graph functions |
-| Maintainability | Terpenuhi | Docs updated with code, no stale references |
+| Smart Memory | Met | CodeNode + CodeEdge entities via hakodb FFI |
+| Anti-Lupa | Met | Graph search + recall before structural changes |
+| Kronologi & Histori | Met | Trace entries + ADR history immutable |
+| Consistency | Met | JSON return format, standard tool names |
+| Cross-Model Consistency | Met | Same flow for all LLM models |
+| Vigilance | Met | detect_changes + coverage detection |
+| Clear Target | Met | Graph queries with clear targets |
+| Codebase Fluency | Met | Rich edge types + Cypher + architecture |
+| Context Frugality | Met | Graph queries reduce code exploration LLM calls |
+| Self Skill Improvement | Met | ADR + trace ingestion for architectural learning |
+| Python Only | Met | No MCP, no Rust/Cargo/build; stdlib only |
+| Real Hakodb FFI | Met | ctypes to libhakodb .so |
+| Code Quality | Met | Clean Python, no bare except, no hardcoded secrets |
+| Testing | Met | Unit tests for all new graph functions |
+| Maintainability | Met | Docs updated with code, no stale references |
 
 No violations. Constitution check PASSED.
 
@@ -115,7 +115,7 @@ AGENTS.md                      # Agent-facing instructions
 
 ### Unknowns from Technical Context
 
-| Unknown | Status | Resolusi |
+| Unknown | Status | Resolution |
 |---------|--------|----------|
 | Typed edge storage in hakodb | Open | Store edges as JSON in `code_edges` collection or embedded in `code_index.edges` |
 | Cypher-like query parser complexity | Open | Implement MATCH/WHERE/RETURN/LIMIT subset in pure Python |
@@ -281,23 +281,23 @@ python3 test_hakoagent.py
 
 ### Re-evaluate Constitution Check (post-design)
 
-| Prinsip Konstitusi | Status Post-Design | Catatan |
+| Constitution Principle | Status Post-Design | Notes |
 |-------------------|-------------------|---------|
-| Smart Memory | Terpenuhi | CodeNode + CodeEdge via FFI |
-| Anti-Lupa | Terpenuhi | Graph search before structural changes |
-| Kronologi & Histori | Terpenuhi | ADR + trace history immutable |
-| Consistency | Terpenuhi | JSON return format, standard tool names |
-| Cross-Model Consistency | Terpenuhi | Same flow for all LLM models |
-| Vigilance | Terpenuhi | detect_changes + coverage |
-| Clear Target | Terpenuhi | Graph queries with clear targets |
-| Codebase Fluency | Terpenuhi | Rich edge types + Cypher + architecture |
-| Context Frugality | Terpenuhi | Graph queries reduce exploration LLM calls |
-| Self Skill Improvement | Terpenuhi | ADR + trace ingestion |
-| Python Only | Terpenuhi | stdlib only, no MCP/Rust/Cargo |
-| Real Hakodb FFI | Terpenuhi | ctypes to libhakodb .so |
-| Code Quality | Terpenuhi | No bare except, no hardcoded secrets |
-| Testing | Terpenuhi | Unit tests for all new graph functions |
-| Maintainability | Terpenuhi | Docs current, no stale references |
+| Smart Memory | Met | CodeNode + CodeEdge via FFI |
+| Anti-Lupa | Met | Graph search before structural changes |
+| Kronologi & Histori | Met | ADR + trace history immutable |
+| Consistency | Met | JSON return format, standard tool names |
+| Cross-Model Consistency | Met | Same flow for all LLM models |
+| Vigilance | Met | detect_changes + coverage |
+| Clear Target | Met | Graph queries with clear targets |
+| Codebase Fluency | Met | Rich edge types + Cypher + architecture |
+| Context Frugality | Met | Graph queries reduce exploration LLM calls |
+| Self Skill Improvement | Met | ADR + trace ingestion |
+| Python Only | Met | stdlib only, no MCP/Rust/Cargo |
+| Real Hakodb FFI | Met | ctypes to libhakodb .so |
+| Code Quality | Met | No bare except, no hardcoded secrets |
+| Testing | Met | Unit tests for all new graph functions |
+| Maintainability | Met | Docs current, no stale references |
 
 No violations. Constitution check PASSED post-design.
 

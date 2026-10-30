@@ -6,44 +6,44 @@
 
 ## Summary
 
-Refactor proyek hakoagent agar sesuai dengan konstitusi terbaru yang didasarkan pada HakoDB. Tujuan utama: membangun tool pendukung harness agent yang smart, tidak mudah lupa, konsisten lintas model LLM, cekatan, target jelas, mengerti codebase dengan cepat, dan irit context/endpoint request. Refactor mencakup 7 modul: HakoDB Binding Layer, Memory Service, Codebase Indexer, Context Retriever, Task Planner, Skill Engine, dan Vigilance Checker. Skill disimpan dalam format Markdown di `.hakoagent/skills/`, database HakoDB di `.hakoagent/hakoagent.db`, dan semua file terkait berada di lingkup hakoagent (tidak ada referensi ke hakoagent).
+Refactor the hakoagent project to align with the latest constitution based on HakoDB. Main goals: build supporting tools for the harness agent that are smart, resistant to forgetting, consistent across LLM models, frugal, with clear targets, quick codebase comprehension, and economical with context/endpoint requests. The refactor covers 7 modules: HakoDB Binding Layer, Memory Service, Codebase Indexer, Context Retriever, Task Planner, Skill Engine, and Vigilance Checker. Skills are stored in Markdown format under `.hakoagent/skills/`, the HakoDB database lives at `.hakoagent/hakoagent.db`, and all related files stay within hakoagent scope (with no references to hakoagent).
 
 ## Technical Context
 
-**Language/Version**: Rust 1.75+ (core), Python 3.11+ (contoh integrasi harness)
+**Language/Version**: Rust 1.75+ (core), Python 3.11+ (harness integration example)
 
 **Primary Dependencies**: hakodb 0.19 (embedded core, `--no-default-features`), cbindgen (C ABI generation), serde (JSON), chrono (timestamp), uuid (ID generation), lazy_static (append-only guard)
 
 **Storage**: HakoDB embedded document database (single file, `.hakoagent/hakoagent.db`), WAL durability, tiered-segment storage
 
-**Testing**: `cargo test` (Rust core), integration tests untuk CLI commands, unit tests untuk setiap modul
+**Testing**: `cargo test` (Rust core), integration tests for CLI commands, unit tests for each module
 
 **Target Platform**: Linux, macOS, Windows (shared library + CLI binary)
 
 **Project Type**: CLI tool + library (Rust crate) + FFI bindings
 
-**Performance Goals**: Siklus tugas lengkap < 30 detik; waktu ambil konteks < X detik; pengurangan panggilan endpoint LLM ≥ N%
+**Performance Goals**: Full task cycle < 30 seconds; context retrieval time < X seconds; endpoint LLM call reduction ≥ N%
 
-**Constraints**: Irit context dan endpoint request; embedded (tanpa server/daemon); footprint ringan (`--no-default-features`); semua file di bawah `.hakoagent/` atau root proyek; skill dalam format Markdown; tidak ada referensi ke hakoagent
+**Constraints**: Frugal with context and endpoint requests; embedded (no server/daemon); light footprint (`--no-default-features`); all files under `.hakoagent/` or the project root; skills in Markdown format; no references to hakoagent
 
-**Scale/Scope**: Single project per database; 9 koleksi HakoDB; 7 modul implementasi; 12 tool calling interface
+**Scale/Scope**: Single project per database; 9 HakoDB collections; 7 implementation modules; 12 tool calling interfaces
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-| Prinsip Konstitusi | Status | Catatan |
+| Constitution Principle | Status | Notes |
 |-------------------|--------|---------|
-| Smart Memory | Terpenuhi | Koleksi `sessions`, `decisions`, `findings`, `skills` |
-| Anti-Lupa | Terpenuhi | Query `findings` + `skills` sebelum tugas baru |
-| Kronologi & Histori | Terpenuhi | Event log append-only di koleksi `events` |
-| Consistency | Terpenuhi | Template output standar lintas model |
-| Cross-Model Consistency | Terpenuhi | Flow tugas sama untuk semua LLM |
-| Vigilance | Terpenuhi | Modul Vigilance Checker |
-| Clear Target | Terpenuhi | Setiap task punya target + DoD |
-| Codebase Fluency | Terpenuhi | Koleksi `code_index` + indexer |
-| Context Frugality | Terpenuhi | HNSW + FTS + `context_cache` + rangkuman |
-| Self Skill Improvement | Terpenuhi | Koleksi `skills` + `lessons_learned` + Markdown |
+| Smart Memory | Met | `sessions`, `decisions`, `findings`, `skills` collections |
+| Anti-Lupa | Met | Query `findings` + `skills` before a new task |
+| Kronologi & Histori | Met | Append-only event log in the `events` collection |
+| Consistency | Met | Standard output template across models |
+| Cross-Model Consistency | Met | Same task flow for all LLMs |
+| Vigilance | Met | Vigilance Checker module |
+| Clear Target | Met | Every task has a target + DoD |
+| Codebase Fluency | Met | `code_index` collection + indexer |
+| Context Frugality | Met | HNSW + FTS + `context_cache` + summaries |
+| Self Skill Improvement | Met | `skills` + `lessons_learned` collections + Markdown |
 
 No violations. Constitution check PASSED.
 
@@ -53,8 +53,8 @@ No violations. Constitution check PASSED.
 
 ```text
 specs/001-refactor-hakoagent/
-├── spec.md          # Spesifikasi fitur (/hakoagent.specify output)
-├── plan.md          # Rencana teknis (ini, /hakoagent.plan output)
+├── spec.md          # Feature specification (/hakoagent.specify output)
+├── plan.md          # Technical plan (this file, /hakoagent.plan output)
 ├── research.md      # Phase 0 output (/hakoagent.plan command)
 ├── data-model.md    # Phase 1 output (/hakoagent.plan command)
 ├── quickstart.md    # Phase 1 output (/hakoagent.plan command)
@@ -65,13 +65,13 @@ specs/001-refactor-hakoagent/
 ### Source Code (repository root)
 
 ```text
-.hakoagent/                      # Directory data HakoAgent (tidak di-track ke git)
-├── hakoagent.db                 # Database HakoDB (single file)
-├── skills/                      # Skill files dalam format Markdown
+.hakoagent/                      # HakoAgent data directory (not tracked by git)
+├── hakoagent.db                 # HakoDB database (single file)
+├── skills/                      # Skill files in Markdown format
 │   ├── skill_001.md
 │   └── skill_002.md
-├── sessions/                    # Export sesi (opsional)
-└── logs/                        # Log operasi (opsional)
+├── sessions/                    # Session exports (optional)
+└── logs/                        # Operation logs (optional)
 
 hakoagent-core/                    # Rust crate (HakoDB binding + core logic)
 ├── Cargo.toml
@@ -106,16 +106,16 @@ hakoagent-core/                    # Rust crate (HakoDB binding + core logic)
 │   │   ├── mod.rs
 │   │   ├── hnsw.rs              # HNSW vector search
 │   │   ├── fts.rs               # Full-text search
-│   │   ├── summarizer.rs        # Rangkuman sebelum endpoint
+│   │   ├── summarizer.rs        # Summary before the endpoint
 │   │   └── cache.rs             # context_cache
 │   ├── planner/                 # Task Planner
 │   │   ├── mod.rs
 │   │   ├── task.rs              # Target + DoD
-│   │   └── flow.rs              # Konsisten lintas model (6-step flow)
+│   │   └── flow.rs              # Consistent across models (6-step flow)
 │   ├── skill_engine/            # Skill Engine
 │   │   ├── mod.rs
-│   │   ├── reflector.rs         # Rifleksi pasca-tugas
-│   │   ├── extractor.rs         # Ekstraksi skill
+│   │   ├── reflector.rs         # Post-task reflection
+│   │   ├── extractor.rs         # Skill extraction
 │   │   └── registry.rs          # Skill registry
 │   └── vigilance/               # Vigilance Checker
 │       ├── mod.rs
@@ -127,20 +127,20 @@ hakoagent-core/                    # Rust crate (HakoDB binding + core logic)
 │   ├── integration/
 │   └── unit/
 ├── examples/
-│   └── python/                  # Contoh integrasi bahasa non-Rust
+│   └── python/                  # Integration example for non-Rust languages
 └── cli/                         # CLI entry point (hakoagent command)
     ├── Cargo.toml
     └── src/
         └── main.rs
 ```
 
-**Structure Decision**: Single project structure (DEFAULT) — Rust crate `hakoagent-core` sebagai inti, CLI sebagai crate terpisah, data di `.hakoagent/`. Ini memenuhi kebutuhan bahasa-agnostik via C ABI dan semua file tetap di lingkup hakoagent.
+**Structure Decision**: Single project structure (DEFAULT) — the `hakoagent-core` Rust crate as the core, the CLI as a separate crate, data in `.hakoagent/`. This meets the language-agnostic requirement via the C ABI and keeps all files within hakoagent scope.
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-Tidak ada pelanggaran konstitusi. Kolom ini dikosongkan.
+No constitution violations. This section is left empty.
 
 ---
 
@@ -148,19 +148,19 @@ Tidak ada pelanggaran konstitusi. Kolom ini dikosongkan.
 
 ### Unknowns from Technical Context
 
-Tidak ada NEEDS CLARIFICATION yang tersisa. Semua parameter teknis telah ditentukan melalui spec dan clarifikasi sebelumnya:
+No NEEDS CLARIFICATION items remain. All technical parameters were determined through the spec and prior clarifications:
 
-| Unknown | Status | Resolusi |
+| Unknown | Status | Resolution |
 |---------|--------|----------|
-| Mekanisme append-only | Resolved | Application-level guard (dokumentasi di spec FR-004 + Clarifications session) |
-| Format skill | Resolved | Markdown (dokumentasi di spec FR-005 + constitution Section 4) |
-| Lokasi database | Resolved | `.hakoagent/hakoagent.db` (constitution Section 3) |
+| Append-only mechanism | Resolved | Application-level guard (documented in spec FR-004 + Clarifications session) |
+| Skill format | Resolved | Markdown (documented in spec FR-005 + constitution Section 4) |
+| Database location | Resolved | `.hakoagent/hakoagent.db` (constitution Section 3) |
 
 ### Research Findings (research.md)
 
-Tidak ada research task yang diperlukan karena semua unknown telah diresolusi. `research.md` akan dicatat sebagai "no unresolved clarifications".
+No research task is required because all unknowns have been resolved. `research.md` will be recorded as "no unresolved clarifications".
 
-**Output**: `research.md` dengan catatan bahwa semua NEEDS CLARIFICATION telah diresolusi sebelumnya.
+**Output**: `research.md` noting that all NEEDS CLARIFICATION items were resolved previously.
 
 ---
 
@@ -168,44 +168,44 @@ Tidak ada research task yang diperlukan karena semua unknown telah diresolusi. `
 
 ### Data Model (`data-model.md`)
 
-Entitas yang diekstrak dari feature spec:
+Entities extracted from the feature spec:
 
-| Entitas | Atribut Utama | Hubungan |
+| Entity | Key Attributes | Relationships |
 |---------|--------------|----------|
 | Event | event_id, timestamp, session_id, actor, action, target, change_type, metadata | session_id → Session |
-| Session | session_id, started_at, ended_at, ringkasan, status, model_used | 1:N dengan Event |
-| Task | task_id, title, target, definition_of_done, prioritas, status, dod_verified, model_used | session_id → Session |
+| Session | session_id, started_at, ended_at, summary, status, model_used | 1:N with Event |
+| Task | task_id, title, target, definition_of_done, priority, status, dod_verified, model_used | session_id → Session |
 | Skill | skill_id, name, description, context_tags, success_count, failure_count, last_used, status | — |
 | Finding | finding_id, content, finding_type, file, event_id | event_id → Event |
 | Decision | decision_id, title, rationale, consequences, event_id | event_id → Event |
-| CodeIndex | entry_id, file_path, symbol_name, symbol_type, dependensi, line_number | — |
+| CodeIndex | entry_id, file_path, symbol_name, symbol_type, dependencies, line_number | — |
 | ContextCacheEntry | cache_key, query, summary, source_documents, created_at, ttl_seconds, hit_count | — |
 | Lesson | lesson_id, title, description, failure_context, remediation, tags, status | — |
 
 State transitions:
 - Task: todo → in-progress → done (dod_verified=true) / blocked
 - Skill: active → deprecated / archived
-- Event: append-only (tidak ada transition, hanya create)
+- Event: append-only (no transitions, create only)
 
 Validation rules:
-- Event: event_id harus unik, tidak dapat di-overwrite (application-level guard)
-- Task: target dan definition_of_done tidak boleh kosong
-- Skill: skill_id harus unik, format file Markdown
+- Event: event_id must be unique and cannot be overwritten (application-level guard)
+- Task: target and definition_of_done must not be empty
+- Skill: skill_id must be unique, file format is Markdown
 
 ### Interface Contracts (`contracts/`)
 
-HakoAgent mengekspos tool calling interface untuk harness agent. Kontrak berikut didefinisikan:
+HakoAgent exposes a tool calling interface for the harness agent. The following contracts are defined:
 
 **File**: `contracts/tool-calling-interface.md`
 
-| Tool | Parameter | Return |
+| Tool | Parameters | Return |
 |------|-----------|--------|
 | `hakoagent.init` | db_path, collections | status, collections_created |
 | `hakoagent.index` | root_path | indexed_count |
 | `hakoagent.recall` | query, limit | context_results |
 | `hakoagent.skill_list` | — | skills_list |
 | `hakoagent.skill_add` | name, content (Markdown) | skill_id, status |
-| `hakoagent.skill_get` | skill_id atau name | skill_content (Markdown) |
+| `hakoagent.skill_get` | skill_id or name | skill_content (Markdown) |
 | `hakoagent.task_list` | — | tasks_list |
 | `hakoagent.task_create` | title, target, definition_of_done, priority | task_id, status |
 | `hakoagent.task_complete` | task_id, dod_verified | status, completed_at |
@@ -215,67 +215,67 @@ HakoAgent mengekspos tool calling interface untuk harness agent. Kontrak berikut
 | `hakoagent.finding_save` | content, finding_type, file | finding_id |
 | `hakoagent.decision_save` | title, rationale, consequences | decision_id |
 
-Return value selalu dalam format JSON untuk kemudahan parsing oleh harness agent.
+Return values are always in JSON format for easy parsing by the harness agent.
 
 ### Quickstart Validation Guide (`quickstart.md`)
 
 **Prerequisites**:
-- Rust toolchain terinstal
-- Hak izin tulis di working directory proyek
+- Rust toolchain installed
+- Write permission in the project working directory
 
 **Setup commands**:
 ```bash
 # Build HakoAgent
 cargo build --release --manifest-path cli/Cargo.toml
 
-# Inisialisasi database
+# Initialize the database
 ./cli/target/release/hakoagent init --db ./.hakoagent/hakoagent.db --collections all
 ```
 
 **Test/run commands**:
 ```bash
-# Uji init
+# Test init
 ./cli/target/release/hakoagent init --db ./.hakoagent/hakoagent.db --collections all
 
-# Uji recall
+# Test recall
 ./cli/target/release/hakoagent recall "bagaimana implementasi error handling Rust?"
 
-# Uji skill
+# Test skill
 ./cli/target/release/hakoagent skill list
 
-# Uji task
+# Test task
 ./cli/target/release/hakoagent task list
 
-# Uji vigilance
+# Test vigilance
 ./cli/target/release/hakoagent vigilance
 ```
 
 **Expected outcomes**:
-- `init`: 9 koleksi dibuat di `.hakoagent/hakoagent.db`
-- `recall`: Mengembalikan konteks relevan dalam waktu target
-- `skill list`: Menampilkan semua skill aktif
-- `task list`: Menampilkan daftar tugas dengan status
-- `vigilance`: Melaporkan file terlupakan, TODO, dan regresi konstitusi
+- `init`: 9 collections created at `.hakoagent/hakoagent.db`
+- `recall`: Returns relevant context within the target time
+- `skill list`: Lists all active skills
+- `task list`: Lists tasks with their statuses
+- `vigilance`: Reports overlooked files, TODOs, and constitution regressions
 
 ### Re-evaluate Constitution Check (post-design)
 
-| Prinsip Konstitusi | Status Post-Design | Catatan |
+| Constitution Principle | Post-Design Status | Notes |
 |-------------------|-------------------|---------|
-| Smart Memory | Terpenuhi | 9 koleksi didefinisikan dalam data model |
-| Anti-Lupa | Terpenuhi | Skill engine + recall via HNSW+FTS |
-| Kronologi & Histori | Terpenuhi | Event append-only dengan application-level guard |
-| Consistency | Terpenuhi | Tool calling interface standar |
-| Cross-Model Consistency | Terpenuhi | Flow 6 langkah sama untuk semua LLM |
-| Vigilance | Terpenuhi | Modul Vigilance Checker didefinisikan |
-| Clear Target | Terpenuhi | Task dengan target + DoD |
-| Codebase Fluency | Terpenuhi | Codebase Indexer + code_index koleksi |
-| Context Frugality | Terpenuhi | Context Retriever + context_cache |
-| Self Skill Improvement | Terpenuhi | Skill Engine + skill Markdown |
+| Smart Memory | Met | 9 collections defined in the data model |
+| Anti-Lupa | Met | Skill engine + recall via HNSW+FTS |
+| Kronologi & Histori | Met | Append-only events with application-level guard |
+| Consistency | Met | Standard tool calling interface |
+| Cross-Model Consistency | Met | Same 6-step flow for all LLMs |
+| Vigilance | Met | Vigilance Checker module defined |
+| Clear Target | Met | Tasks with target + DoD |
+| Codebase Fluency | Met | Codebase Indexer + code_index collection |
+| Context Frugality | Met | Context Retriever + context_cache |
+| Self Skill Improvement | Met | Skill Engine + Markdown skills |
 
 No violations. Constitution check PASSED post-design.
 
 ---
 
-**Design artifacts siap: `research.md`, `data-model.md`, `contracts/tool-calling-interface.md`, `quickstart.md`**
+**Design artifacts ready: `research.md`, `data-model.md`, `contracts/tool-calling-interface.md`, `quickstart.md`**
 
-Plan workflow selesai. Siap untuk dilanjutkan ke `/hakoagent-tasks`.
+Plan workflow complete. Ready to proceed to `/hakoagent-tasks`.

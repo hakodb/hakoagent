@@ -1,4 +1,4 @@
-# Specification Quality Checklist: System Caching dan Graph Traversal Tools
+# Specification Quality Checklist: System Caching and Graph Traversal Tools
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-10-29

@@ -6,21 +6,21 @@
 
 ## Purpose
 
-Dokumentasi validasi akhir ke akhir (end-to-end) yang membuktikan fitur HakoAgent bekerja sesuai spesifikasi dan konstitusi. Panduan ini berisi skenario yang dapat dijalankan, bukan kode implementasi lengkap.
+End-to-end validation documentation proving the HakoAgent feature works according to the specification and the constitution. This guide contains runnable scenarios, not full implementation code.
 
 ## Prerequisites
 
-- Rust toolchain terinstal (cargo, rustc)
-- Hak izin tulis di working directory proyek
-- HakoDB 0.19 tersedia sebagai dependency
+- Rust toolchain installed (cargo, rustc)
+- Write permission in the project working directory
+- HakoDB 0.19 available as a dependency
 
 ## Setup Commands
 
 ```bash
-# 1. Build HakoAgent core dan CLI
+# 1. Build HakoAgent core and CLI
 cargo build --release --manifest-path cli/Cargo.toml
 
-# 2. Inisialisasi database HakoDB dan semua koleksi
+# 2. Initialize the HakoDB database and all collections
 ./cli/target/release/hakoagent init --db ./.hakoagent/hakoagent.db --collections all
 ```
 
@@ -32,41 +32,41 @@ Collections: ["sessions", "events", "decisions", "findings", "code_index", "task
 
 ## Test/Run Commands
 
-### Test 1: Inisialisasi database (FR-002, FR-003)
+### Test 1: Initialize the database (FR-002, FR-003)
 
 ```bash
 ./cli/target/release/hakoagent init --db ./.hakoagent/hakoagent.db --collections all
 ```
 
-**Expected**: Semua 9 koleksi dibuat di `.hakoagent/hakoagent.db`:
+**Expected**: All 9 collections are created at `.hakoagent/hakoagent.db`:
 - sessions, events, decisions, findings, code_index, tasks, context_cache, skills, lessons_learned
 
-### Test 2: Catat event append-only (FR-004)
+### Test 2: Record an append-only event (FR-004)
 
 ```bash
 ./cli/target/release/hakoagent events
 ```
 
-**Expected**: Tampilkan histori event (kosong pada inisialisasi pertama). Setiap event baru ditambahkan dengan timestamp dan tidak dapat di-overwrite.
+**Expected**: Display the event history (empty on first initialization). Each new event is appended with a timestamp and cannot be overwritten.
 
-### Test 3: Ambil konteks dari memori (FR-007)
+### Test 3: Retrieve context from memory (FR-007)
 
 ```bash
 ./cli/target/release/hakoagent recall "bagaimana implementasi error handling Rust?"
 ```
 
-**Expected**: Mengembalikan konteks relevan dari `code_index` melalui HNSW + FTS dalam waktu target (< X detik).
+**Expected**: Returns relevant context from `code_index` via HNSW + FTS within the target time (< X seconds).
 
-### Test 4: Kelola skill dalam format Markdown (FR-005)
+### Test 4: Manage skills in Markdown format (FR-005)
 
 ```bash
 ./cli/target/release/hakoagent skill list
 ./cli/target/release/hakoagent skill add "rust_error_handling"
 ```
 
-**Expected**: Skill baru dibuat sebagai file Markdown di `.hakoagent/skills/`, bukan YAML atau JSON.
+**Expected**: A new skill is created as a Markdown file under `.hakoagent/skills/`, not YAML or JSON.
 
-### Test 5: Buat dan selesaikan task dengan DoD (FR-006)
+### Test 5: Create and complete a task with DoD (FR-006)
 
 ```bash
 ./cli/target/release/hakoagent task list
@@ -74,37 +74,37 @@ Collections: ["sessions", "events", "decisions", "findings", "code_index", "task
 ./cli/target/release/hakoagent task complete <task_id>
 ```
 
-**Expected**: Task dibuat dengan target dan definition_of_done. Setelah selesai, status berubah menjadi "done" dan `dod_verified` = true.
+**Expected**: The task is created with a target and definition_of_done. After completion, the status changes to "done" and `dod_verified` = true.
 
-### Test 6: Deteksi regresi dan file terlupakan (FR-008)
+### Test 6: Detect regressions and overlooked files (FR-008)
 
 ```bash
 ./cli/target/release/hakoagent vigilance
 ```
 
-**Expected**: Laporan berisi file yang diubah tapi tidak diuji, TODO yang belum disentuh, dan pemeriksaan regresi terhadap prinsip konstitusi.
+**Expected**: The report contains files changed but not tested, untouched TODOs, and regression checks against constitution principles.
 
 ## Expected Outcomes (Success Criteria)
 
-| SC | Target | Hasil yang Diharapkan |
+| SC | Target | Expected Result |
 |----|--------|----------------------|
-| SC-001 | Siklus tugas lengkap < 30 detik | `init → recall → event_log → task_create → skill_add → task_complete` selesai dalam waktu target |
-| SC-002 | 100% task selesai memiliki DoD | Setiap task yang ditandai "done" memiliki `dod_verified` = true |
-| SC-003 | 0 referensi ke "hakoagent" | Tidak ada kata "hakoagent" di seluruh file sumber, dokumentasi, dan konfigurasi |
-| SC-004 | 100% skill sebagai Markdown | Semua file di `.hakoagent/skills/` berekstensi `.md` |
-| SC-005 | Event tidak dapat di-overwrite | Setiap event memiliki timestamp ISO 8601 dan tidak dapat ditimpa |
-| SC-006 | Tool calling mudah ditemukan | Semua tool `hakoagent.<command>` dapat dipanggil tanpa konfigurasi kompleks |
+| SC-001 | Full task cycle < 30 seconds | `init → recall → event_log → task_create → skill_add → task_complete` finishes within the target time |
+| SC-002 | 100% of completed tasks have a DoD | Every task marked "done" has `dod_verified` = true |
+| SC-003 | 0 references to "hakoagent" | No occurrence of "hakoagent" in any source file, documentation, or configuration |
+| SC-004 | 100% of skills as Markdown | All files under `.hakoagent/skills/` have the `.md` extension |
+| SC-005 | Events cannot be overwritten | Every event has an ISO 8601 timestamp and cannot be overwritten |
+| SC-006 | Tool calling easy to discover | All `hakoagent.<command>` tools can be invoked without complex configuration |
 
 ## Validation Steps
 
-1. Jalankan semua perintah Setup di atas
-2. Jalankan Test 1 s.d. Test 6 secara berurutan
-3. Verifikasi Expected Outcomes sesuai tabel di atas
-4. Jika semua lulus, fitur dianggap siap untuk fase implementasi selanjutnya
+1. Run all the Setup commands above
+2. Run Test 1 through Test 6 in order
+3. Verify the Expected Outcomes against the table above
+4. If everything passes, the feature is considered ready for the next implementation phase
 
 ## References
 
-- Spesifikasi fitur: `spec.md`
-- Model data: `data-model.md`
-- Kontrak antarmuka: `contracts/tool-calling-interface.md`
-- Konstitusi: `.specify/memory/constitution.md`
+- Feature specification: `spec.md`
+- Data model: `data-model.md`
+- Interface contract: `contracts/tool-calling-interface.md`
+- Constitution: `.specify/memory/constitution.md`

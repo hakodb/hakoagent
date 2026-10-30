@@ -6,20 +6,20 @@
 
 ## Overview
 
-Auto Codebase Indexing diekspos sebagai bagian dari tool calling interface HakoAgent. Background thread berjalan otomatis saat `hakoagent init` dieksekusi. Tidak ada CLI command khusus untuk auto indexing — semua terintegrasi ke dalam inisialisasi dan file system watcher.
+Auto Codebase Indexing is exposed as part of the HakoAgent tool calling interface. The background thread runs automatically when `hakoagent init` is executed. There is no dedicated CLI command for auto indexing — everything is integrated into initialization and the file system watcher.
 
 ## Tool List
 
-| Tool | Deskripsi | Parameter Utama | Return |
+| Tool | Description | Main Parameters | Return |
 |------|-----------|-----------------|--------|
-| `hakoagent.init` | Inisialisasi database HakoDB dan memulai background thread auto indexing | `db_path` (string), `collections` (array of string) | `status` (string), `collections_created` (array), `indexing_started` (boolean) |
-| `hakoagent.index` | Memaksa re-index seluruh codebase (manual override) | — | `indexing_run_id` (string), `status` (string) |
-| `hakoagent.recall` | Ambil konteks dari memori (HNSW + FTS pada code_index) | `query` (string), `limit` (integer) | `context_results` (array) |
-| `hakoagent.events` | Lihat histori kronologis termasuk indexing events | `limit` (integer), `session_id` (string) | `events_list` (array) |
+| `hakoagent.init` | Initialize the HakoDB database and start the background thread auto indexing | `db_path` (string), `collections` (array of string) | `status` (string), `collections_created` (array), `indexing_started` (boolean) |
+| `hakoagent.index` | Force a re-index of the entire codebase (manual override) | — | `indexing_run_id` (string), `status` (string) |
+| `hakoagent.recall` | Retrieve context from memory (HNSW + FTS on code_index) | `query` (string), `limit` (integer) | `context_results` (array) |
+| `hakoagent.events` | View chronological history including indexing events | `limit` (integer), `session_id` (string) | `events_list` (array) |
 
 ## Response Format
 
-Semua respons dalam format JSON:
+All responses are in JSON format:
 
 ```json
 {
@@ -29,7 +29,7 @@ Semua respons dalam format JSON:
 }
 ```
 
-Contoh respons sukses `hakoagent.init`:
+Example success response for `hakoagent.init`:
 ```json
 {
   "status": "success",
@@ -41,7 +41,7 @@ Contoh respons sukses `hakoagent.init`:
 }
 ```
 
-Contoh respons sukses `hakoagent.recall`:
+Example success response for `hakoagent.recall`:
 ```json
 {
   "status": "success",
@@ -61,25 +61,25 @@ Contoh respons sukses `hakoagent.recall`:
 
 ## Integration Notes
 
-- Background thread dimulai otomatis saat `hakoagent.init` dieksekusi
-- File system watcher memantau perubahan secara real-time
-- Setiap indexing event dicatat ke koleksi `events` (append-only)
-- Error pada satu file tidak menghentikan indexing file lainnya
-- Notifikasi ringkas dikirim ke agen setelah setiap sesi indexing selesai
+- The background thread starts automatically when `hakoagent.init` is executed
+- The file system watcher monitors changes in real time
+- Every indexing event is recorded in the `events` collection (append-only)
+- An error on one file does not stop indexing of other files
+- A concise notification is sent to the agent after every indexing session finishes
 
 ## Integration Example (Pseudocode)
 
 ```python
-# Inisialisasi HakoAgent (background thread auto indexing mulai otomatis)
+# Initialize HakoAgent (background thread auto indexing starts automatically)
 result = hakoagent.init(db_path="./.hakoagent/hakoagent.db", collections="all")
 print(f"Indexing started: {result['data']['indexing_started']}")
 
-# Agen bekerja, file berubah di background
-# Background thread secara otomatis mendeteksi dan mengindex
+# The agent works, files change in the background
+# The background thread automatically detects and indexes them
 
-# Ambil konteks dari code_index
+# Retrieve context from code_index
 context = hakoagent.recall(query="error handling pattern", limit=5)
 
-# Lihat histori indexing
+# View indexing history
 events = hakoagent.events(limit=10)
 ```
