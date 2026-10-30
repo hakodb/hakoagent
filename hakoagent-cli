@@ -5,6 +5,7 @@ The real implementation lives in ./hakoagent. Keeping a single copy avoids
 the cli/mcp entry points drifting out of sync after edits.
 """
 import os
+import runpy
 import sys
 
 _here = os.path.dirname(os.path.realpath(__file__))
@@ -13,5 +14,6 @@ if not os.path.exists(_target):
     sys.stderr.write("hakoagent: cannot find %s\n" % _target)
     sys.exit(1)
 os.environ["HAKOAGENT_MODE"] = "cli"
-_python = sys.executable or "python3"
-os.execv(_python, [_python, _target] + sys.argv[1:])
+# Cross-platform exec: os.execv is unreliable on Windows.
+sys.argv = [_target] + sys.argv[1:]
+runpy.run_path(_target, run_name="__main__")

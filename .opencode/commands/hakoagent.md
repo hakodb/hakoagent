@@ -21,7 +21,7 @@ Use the hakoagent CLI for memory, caching, graph traversal, skills, tasks, and v
 2. Run `hakoagent index` after significant code changes — **enforced automatically on `hakoagent task complete`** (quiet re-index, only if git shows uncommitted file changes). Ad-hoc edits outside a task still require manual `hakoagent index`.
 3. Every action is logged to `events` (append-only) — use `hakoagent events [--limit N]`
 4. Use `hakoagent skill get <skill_id> [--summary]` to retrieve skill context — `--summary` skips markdown body; full skill available without the flag
-5. **MCP server is OFF by default** — `install.sh --global` no longer writes MCP config to `~/.claude.json` or `~/.config/opencode/opencode.jsonc`. To enable MCP for a specific project:
+5. **MCP server is OFF by default** — `install.py --global` no longer writes MCP config to `~/.claude.json` or `~/.config/opencode/opencode.jsonc`. To enable MCP for a specific project:
    `hakoagent mcp enable` (creates `.hakoagent/mcp-enabled`), then `hakoagent-mcp` to start the server.
    Use `hakoagent mcp disable` to turn it off, `hakoagent mcp status` to check.
-6. Install with: `install.sh` (project) or `install.sh --global` (global)
+6. Install with: `install.py` (project) or `install.py --global` (global)

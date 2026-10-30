@@ -117,7 +117,7 @@ resp = json.loads(proc.stdout.readline())
 7. Use `bug_scan` to find code quality issues before they become bugs
 8. Use `skill get <skill_id> [--summary]` to retrieve skill context — `--summary` skips markdown body
    to keep agent context lean; full skill is available without the flag when needed.
-9. **MCP server is OFF by default** — `install.sh --global` does not write MCP config to
+9. **MCP server is OFF by default** — `install.py --global` does not write MCP config to
    `~/.claude.json` or `~/.config/opencode/opencode.jsonc`. To enable MCP for a specific project:
    `hakoagent mcp enable` creates `.hakoagent/mcp-enabled` **and** adds
    `mcp.servers.hakoagent` (OpenCode V2 shape, absolute `hakoagent-mcp` path) to the project's

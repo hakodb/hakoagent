@@ -9,18 +9,26 @@
 
 ```bash
 # Clone repositori
-git clone <repository-url>
+git clone https://github.com/hakodb/hakoagent.git
 cd hakoagent
 
-# Pasang executable dan konfigurasi OpenCode ke PATH
-chmod +x hakoagent install.sh
-./install.sh          # project-local: ./hakoagent + ./lib/ + ./AGENTS.md + .opencode/
-./install.sh --global # global: ~/.local/bin/hakoagent + lib/ + skills/ + commands/
-export PATH="$HOME/.local/bin:$PATH"
+# Pasang (installer cross-platform, Python stdlib only)
+python install.py            # project-local: ./hakoagent + ./lib/ + ./AGENTS.md + .opencode/
+python install.py --global   # global: ~/.local/bin (Linux) | %LOCALAPPDATA%\hakoagent\bin + shims .cmd (Windows)
+export PATH="$HOME/.local/bin:$PATH"   # Linux saja; Windows: setx PATH (diprint oleh installer)
 
 # Verifikasi instalasi
 hakoagent --help
 ```
+
+Catatan:
+- `install.py` mengunduh native hakodb library dari release terbaru `github.com/hakodb/hakodb`
+  (Windows x86_64: `.dll`, Linux x86_64: `.so`) serta memverifikasinya via `SHA256SUMS`.
+- **HakoAgent menolak berjalan tanpa native library** (tidak ada fallback JSON).
+- macOS belum didukung (belum ada native library) — installer berhenti dengan pesan jelas.
+- Windows: eksekusi script via interpreter, contoh `python hakoagent --help`; MCP config
+  ditulis dengan `python "<path hakoagent-mcp>"` sebagai command.
+- `--remove-data` pada uninstall ikut menghapus `.hakoagent/`.
 
 ### Inisialisasi Database (sekali saja per proyek)
 

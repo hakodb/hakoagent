@@ -38,3 +38,9 @@ hakoagent.db
 
 # Per-project agent config (generated, not source)
 .claude.json
+
+# Native hakodb library — downloaded by install.py from hakodb releases (not source)
+/lib/
+
+# spec-kit scaffold (project-local tooling, not source)
+.specify/

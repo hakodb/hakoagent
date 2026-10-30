@@ -50,26 +50,55 @@ from ctypes import CDLL, c_char_p, c_int, c_void_p, POINTER, byref, c_uint16
 # Hakodb FFI (prebuilt shared library)
 # ---------------------------------------------------------------------------
 
-_HAKO_LIB_PATH = Path(__file__).resolve().parent / "lib" / "libhakodb-x86_64-unknown-linux-glibc2.28-el8.so"
+_LIB_DIR = Path(__file__).resolve().parent / "lib"
 _hakodb_lib = None
-_HAKO_LIB_WARNED = False
+
+
+def _hakodb_lib_candidates():
+    """Native lib files in lib/, ordered per platform (hakodb release layout).
+
+    Linux: prefer the oldest-glibc build (glibc2.28) — it loads on every
+    newer glibc; newer builds are tried in order if it fails to open.
+    """
+    if sys.platform == "win32":
+        return sorted(_LIB_DIR.glob("hakodb-*.dll"))
+    if sys.platform.startswith("linux"):
+        # shortcut: no musl-core .so asset released yet, glibc-only, upgrade
+        # when hakodb publishes one; macOS has no asset at all (intentional off).
+        order = ("glibc2.28", "glibc2.35", "glibc2.39")
+        return sorted(
+            _LIB_DIR.glob("libhakodb-*.so"),
+            key=lambda p: next((i + 1 for i, t in enumerate(order) if t in p.name), 0),
+            reverse=True,
+        )
+    return []
 
 
 def _hakodb_lib_load():
-    """Lazy-load the prebuilt hakodb shared library."""
-    global _hakodb_lib, _HAKO_LIB_WARNED
+    """Load the prebuilt hakodb shared library; hard-fail when missing.
+
+    Policy: no JSON fallback — hakoagent runs only on a real hakodb engine.
+    """
+    global _hakodb_lib
     if _hakodb_lib is None:
-        try:
-            _hakodb_lib = CDLL(str(_HAKO_LIB_PATH))
-        except OSError:
-            _hakodb_lib = None
-            if not _HAKO_LIB_WARNED:
-                sys.stderr.write(
-                    "Warning: hakodb library not found at %s; using JSON-only storage\n"
-                    % str(_HAKO_LIB_PATH)
-                )
-                sys.stderr.flush()
-                _HAKO_LIB_WARNED = True
+        for cand in _hakodb_lib_candidates():
+            try:
+                _hakodb_lib = CDLL(str(cand))
+                break
+            except OSError:
+                continue  # wrong-variant build for this glibc; try the next
+        if _hakodb_lib is None:
+            sys.stderr.write(
+                "hakoagent: hakodb native library not found/loadable under %s "
+                "(platform: %s).\n"
+                "hakoagent requires the hakodb engine and will not run without it\n"
+                "(macOS is not supported yet).\n"
+                "Install with: python install.py   (downloads the library from "
+                "github.com/hakodb/hakodb releases)\n"
+                % (str(_LIB_DIR), sys.platform)
+            )
+            sys.stderr.flush()
+            sys.exit(1)
     return _hakodb_lib
 
 
@@ -608,13 +637,25 @@ def _mcp_project_config_path():
     return ROOT / ".opencode" / "opencode.json"
 
 
+def _mcp_command_config():
+    """MCP `command` array for the project config.
+
+    Windows cannot exec extensionless python scripts directly, so run
+    everything through the current interpreter.
+    """
+    path = _mcp_command_path()
+    if sys.platform == "win32":
+        return [sys.executable or "python", path]
+    return [path]
+
+
 def _mcp_config_snippet():
     return {
         "mcp": {
             "servers": {
                 "hakoagent": {
                     "type": "local",
-                    "command": [_mcp_command_path()],
+                    "command": _mcp_command_config(),
                 }
             }
         }
@@ -656,7 +697,7 @@ def _mcp_write_project_config(enable):
     if enable:
         servers["hakoagent"] = {
             "type": "local",
-            "command": [_mcp_command_path()],
+            "command": _mcp_command_config(),
         }
         mcp["servers"] = servers
         data["mcp"] = mcp
@@ -5285,7 +5326,7 @@ def cmd_mcp(args):
             print("  status   Show whether MCP is enabled for this project")
             print("  help     Show this help message")
             print()
-            print("MCP is OFF by default. Global install (install.sh --global) does")
+            print("MCP is OFF by default. Global install (install.py --global) does")
             print("not write MCP config to ~/.claude.json or OpenCode config.")
             print("Enable per project with: hakoagent mcp enable")
             return 0
@@ -5323,9 +5364,12 @@ def cmd_mcp(args):
     _ensure_dirs()
     engine = _get_engine(db_path)
     if engine is None:
-        import sys as _mcp_sys
-        _mcp_sys.stderr.write("Warning: hakodb engine not available, using JSON-only storage\n")
-        _mcp_sys.stderr.flush()
+        sys.stderr.write(
+            "hakoagent: hakodb engine failed to open at %s — refusing to serve\n"
+            % str(db_path or HAKO_DIR)
+        )
+        sys.stderr.flush()
+        return 1
 
     _mcp_json_rpc_loop(engine)
     return 0
