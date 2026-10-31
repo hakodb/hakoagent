@@ -1,0 +1,35 @@
+# Quick gate for branch protection (required check on main).
+# Same shape as the hakocli template (ci-quick.yml): one fast job.
+# hakoagent is Python stdlib + the prebuilt hakodb native library, which
+# install.py fetches from hakodb releases (lib/ is not source-controlled).
+
+name: ci-quick
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: quick-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: compile check
+        run: python -m compileall -q hakoagent hakoagent-cli hakoagent-mcp hakoagent-mcp-server install.py
+
+      - name: fetch native library
+        run: python install.py
+
+      - name: tests (stdlib unittest, zero deps)
+        run: python -m unittest test_hakoagent
