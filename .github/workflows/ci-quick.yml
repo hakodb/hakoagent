@@ -18,6 +18,9 @@ jobs:
   check:
     name: quick-check
     runs-on: ubuntu-latest
+    # A hang here means the pinned hakodb release assets are stale
+    # relative to the FFI wiring - fail loud, never burn runner hours.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
