@@ -1556,20 +1556,55 @@ class TestUS9HakodbSync(HakoAgentTestCase):
         hakoagent._ensure_dirs()
         hakoagent._SYNC_CONFIG = None
         hakoagent._NET_SYNCER = None
-        rc = hakoagent._cmd_sync_enable([
-            "hakoagent", "sync", "enable",
-            "--type", "cloud",
-            "--server", "https://sync.example.com",
-            "--token", "test-token-123",
-            "--room-key", "cloud-room",
-            "--actor", "agent-a",
-        ])
+        # Stub the network side: this test verifies config persistence and
+        # the enable flow, not the hub connection (no network in tests).
+        orig_new = hakoagent.hk_cloud_sync_client_new
+        orig_start = hakoagent.hk_cloud_sync_start
+        hakoagent.hk_cloud_sync_client_new = lambda *a: object()
+        hakoagent.hk_cloud_sync_start = lambda *a: 0
+        try:
+            rc = hakoagent._cmd_sync_enable([
+                "hakoagent", "sync", "enable",
+                "--type", "cloud",
+                "--server", "https://sync.example.com",
+                "--token", "test-token-123",
+                "--room-key", "cloud-room",
+                "--room-name", "test-room",
+                "--actor", "agent-a",
+            ])
+        finally:
+            hakoagent.hk_cloud_sync_client_new = orig_new
+            hakoagent.hk_cloud_sync_start = orig_start
+            hakoagent._NET_SYNCER = None
         self.assertEqual(rc, 0)
         config = hakoagent._load_sync_config()
         self.assertTrue(config.get("enabled"))
         self.assertEqual(config.get("type"), "cloud")
+        self.assertEqual(config.get("room_name"), "test-room")
         self.assertEqual(config.get("server_url"), "https://sync.example.com")
         self.assertEqual(config.get("api_token"), "test-token-123")
+
+    def test_cloud_sync_ffi_lifecycle(self):
+        """Cloud FFI wiring (hakodb 0.20 ABI): create -> start(fail fast
+        against a dead port) -> status -> free, without crashing."""
+        hakoagent._ensure_dirs()
+        engine = hakoagent.hk_engine_open(str(hakoagent.MEMORY_DIR))
+        self.assertIsNotNone(engine)
+        try:
+            syncer = hakoagent.hk_cloud_sync_client_new(
+                engine, "t-client", "room", "key", "tok")
+            self.assertIsNotNone(syncer)
+            # start() parks the runtime in the handle and returns at once;
+            # the connect loop retries in the background (offline-first).
+            # The real regression guard is that stop/free below complete.
+            rc = hakoagent.hk_cloud_sync_start(syncer, "http://127.0.0.1:1")
+            self.assertEqual(rc, 0)
+            status = hakoagent.hk_cloud_sync_status(syncer)
+            self.assertTrue(status is None or isinstance(status, str))
+            hakoagent.hk_cloud_sync_stop(syncer)
+            hakoagent.hk_cloud_sync_free(syncer)
+        finally:
+            hakoagent.hk_engine_free(engine)
 
     def test_sync_enable_invalid_type(self):
         """T035: invalid type (not mesh/cloud) rejected."""
