@@ -4190,6 +4190,7 @@ def print_help():
     print("  bug_scan                                  Scan for bug patterns in indexed code")
     print("  suggest                                   Suggest recall queries based on recent activity")
     print("  team init/status/sync/assign/context      Team context (multi-agent collaboration)")
+    print("  sync enable/disable/status/sync-now/backup  Mesh or cloud replication")
     print("  cache stats                               View cache statistics")
     print("  cache get <query>                         Retrieve context from cache")
     print("  cache put <query> <summary> [ttl]         Store context in cache")
