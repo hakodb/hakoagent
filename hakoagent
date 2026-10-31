@@ -46,6 +46,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from ctypes import CDLL, c_char_p, c_int, c_void_p, POINTER, byref, c_uint16
 
+__version__ = "0.1.1"
+
 # ---------------------------------------------------------------------------
 # Hakodb FFI (prebuilt shared library)
 # ---------------------------------------------------------------------------
@@ -466,32 +468,66 @@ def hk_watch_free(watch):
 
 
 # Cloud sync
-_hk_cloud_sync_new = None
-_hk_cloud_sync_start = None
-_hk_cloud_sync_status = None
+# Signatures verified against the hakodb 0.20 C ABI (src/ffi.rs):
+#   hk_cloud_sync_client_new(engine, client_id, room_name, room_key,
+#                            auth_token) -> HK_CloudSync*
+#   hk_cloud_sync_start(syncer, server_url) -> i32   (ws:// or http:// URL)
+#   hk_cloud_sync_status(syncer) -> char* (redacted JSON) / stop / free
+def hk_cloud_sync_client_new(engine, client_id, room_name, room_key, auth_token):
+    """Create a cloud-sync CLIENT bound to a room of the hub."""
+    lib = _hakodb_lib_load()
+    if lib is None:
+        return None
+    fn = lib.hk_cloud_sync_client_new
+    fn.argtypes = [c_void_p, c_char_p, c_char_p, c_char_p, c_char_p]
+    fn.restype = c_void_p
+    return fn(engine, client_id.encode(), room_name.encode(),
+              room_key.encode(), auth_token.encode())
 
 
-def hk_cloud_sync_new(server_url, api_token, room_key):
-    """Create a cloud sync instance.
-    
-    Note: Cloud sync FFI signatures in libhakodb .so are not fully verified.
-    hk_cloud_sync_new/start/status exist but return c_int with unknown argtypes.
-    Cloud sync is declared but not wired to C calls to avoid segfaults.
-    Returns None to indicate cloud sync is not available via FFI yet.
-    """
-    # Cloud sync FFI not yet wired - signatures unknown in .so
-    # Return None to signal cloud sync unavailable
-    return None
-
-
-def hk_cloud_sync_start(syncer):
-    """Start the cloud sync instance."""
-    return -1  # Not available
+def hk_cloud_sync_start(syncer, server_url):
+    """Connect the client to a cloud hub (ws:// or http:// URL)."""
+    lib = _hakodb_lib_load()
+    if lib is None:
+        return -1
+    fn = lib.hk_cloud_sync_start
+    fn.argtypes = [c_void_p, c_char_p]
+    fn.restype = c_int
+    return fn(syncer, server_url.encode())
 
 
 def hk_cloud_sync_status(syncer):
-    """Get cloud sync status as JSON."""
-    return None
+    """Redacted status JSON (mode, connected, room_name, active_clients)."""
+    lib = _hakodb_lib_load()
+    if lib is None:
+        return None
+    fn = lib.hk_cloud_sync_status
+    fn.argtypes = [c_void_p]
+    fn.restype = c_char_p
+    ptr = fn(syncer)
+    return ptr.decode() if ptr else None
+
+
+def hk_cloud_sync_stop(syncer):
+    """Stop the cloud sync instance (idempotent)."""
+    lib = _hakodb_lib_load()
+    if lib is None:
+        return
+    fn = lib.hk_cloud_sync_stop
+    fn.argtypes = [c_void_p]
+    fn.restype = None
+    fn(syncer)
+
+
+def hk_cloud_sync_free(syncer):
+    """Free the cloud sync handle (we own it: Box::into_raw on the C side)."""
+    lib = _hakodb_lib_load()
+    if lib is None:
+        return
+    fn = lib.hk_cloud_sync_free
+    fn.argtypes = [c_void_p]
+    fn.restype = None
+    fn(syncer)
 
 
 # Backup
@@ -540,6 +576,7 @@ def _load_sync_config():
             "enabled": False,
             "type": "mesh",
             "room_key": None,
+            "room_name": None,
             "port": 9876,
             "server_url": None,
             "api_token": None,
@@ -580,13 +617,21 @@ def _set_net_syncer(syncer):
     _NET_SYNCER = syncer
 
 
-def _free_net_syncer():
-    """Free the cached net syncer handle."""
+def _free_net_syncer(cloud=False):
+    """Release the cached syncer handle.
+
+    The mesh net syncer is engine-owned (nothing to free on the C side);
+    the cloud sync handle is ours (Box::into_raw), so stop + free it.
+    `cloud` must be captured before the caller clears the config type.
+    """
     global _NET_SYNCER
     if _NET_SYNCER is not None:
-        # Note: hk_watch_free is for HK_Watch handles, not HK_NetSyncer.
-        # There is no hk_net_syncer_free in the header, so we just release
-        # our reference. The engine owns the syncer lifecycle.
+        if cloud:
+            try:
+                hk_cloud_sync_stop(_NET_SYNCER)
+                hk_cloud_sync_free(_NET_SYNCER)
+            except Exception:
+                pass  # engine may already be closed
         _NET_SYNCER = None
 
 
@@ -3693,6 +3738,7 @@ def _cmd_sync_enable(args):
     """Enable hakodb synchronization (mesh or cloud)."""
     sync_type = "mesh"
     room_key = None
+    room_name = None
     port = 9876
     server_url = None
     api_token = None
@@ -3710,6 +3756,9 @@ def _cmd_sync_enable(args):
             i += 2
         elif args[i] == "--room-key" and i + 1 < len(args):
             room_key = args[i + 1]
+            i += 2
+        elif args[i] == "--room-name" and i + 1 < len(args):
+            room_name = args[i + 1]
             i += 2
         elif args[i] == "--port" and i + 1 < len(args):
             try:
@@ -3748,6 +3797,7 @@ def _cmd_sync_enable(args):
     config["enabled"] = True
     config["type"] = sync_type
     config["room_key"] = room_key
+    config["room_name"] = room_name
     config["port"] = port
     config["server_url"] = server_url
     config["api_token"] = api_token
@@ -3781,20 +3831,39 @@ def _cmd_sync_enable(args):
                 else:
                     print(f"Warning: net syncer start returned {rc}")
 
-    # For cloud sync, create cloud syncer
+    # For cloud sync, create a room-bound cloud CLIENT (hakodb 0.20 ABI)
+    # and connect it to the hub's sync listener.
     elif sync_type == "cloud":
-        cloud_syncer = hk_cloud_sync_new(server_url or "", api_token or "", room_key or "")
-        if cloud_syncer:
-            hk_cloud_sync_start(cloud_syncer)
-            _set_net_syncer(cloud_syncer)
+        engine = _get_engine()
+        if engine:
+            name = room_name or room_key or "default"
+            cloud_syncer = hk_cloud_sync_client_new(
+                engine,
+                config.get("actor") or "hakoagent",
+                name,
+                room_key or "",
+                api_token or "",
+            )
+            if cloud_syncer:
+                rc = hk_cloud_sync_start(cloud_syncer, server_url or "")
+                if rc == 0:
+                    _set_net_syncer(cloud_syncer)
+                else:
+                    hk_cloud_sync_free(cloud_syncer)
+                    print(f"Warning: cloud sync start returned {rc}. "
+                          "Config saved but not connected.")
+            else:
+                print("Warning: cloud sync client could not be created "
+                      "(native lib without cloud-sync support?). "
+                      "Config saved but cloud sync not active.")
         else:
-            print("Warning: Cloud sync FFI not available in this build. "
-                  "Config saved but cloud sync not active via FFI.")
+            print("Warning: engine unavailable; cloud sync config saved.")
 
     print(json.dumps({
         "enabled": True,
         "type": sync_type,
         "room_key": room_key,
+        "room_name": room_name,
         "port": port,
         "server_url": server_url,
         "api_token": "***" if api_token else None,
@@ -3810,13 +3879,14 @@ def _cmd_sync_enable(args):
 def _cmd_sync_disable(args):
     """Disable synchronization."""
     config = _load_sync_config()
+    was_cloud = config.get("type") == "cloud"
     config["enabled"] = False
     config["type"] = None
     config["started_at"] = None
     _save_sync_config(config)
 
     # Free net syncer
-    _free_net_syncer()
+    _free_net_syncer(cloud=was_cloud)
 
     print(json.dumps({
         "enabled": False,
@@ -3854,11 +3924,15 @@ def _cmd_sync_status(args):
         "pending_changes": 0,
     }
 
-    # Get net syncer status if available
+    # Get syncer status if available. Cloud and net syncer are distinct
+    # opaque handles - never pass one where the other is expected.
     syncer = _get_net_syncer()
     if syncer:
         try:
-            status_str = hk_net_syncer_status(syncer)
+            if config.get("type") == "cloud":
+                status_str = hk_cloud_sync_status(syncer)
+            else:
+                status_str = hk_net_syncer_status(syncer)
             if status_str:
                 try:
                     status_json = json.loads(status_str)
@@ -4096,7 +4170,7 @@ def cmd_revision(args):
 # ---------------------------------------------------------------------------
 
 def print_help():
-    print("HakoAgent — HakoDB Agent Memory & Skill Engine")
+    print(f"HakoAgent v{__version__} — HakoDB Agent Memory & Skill Engine")
     print()
     print("Usage: hakoagent <command> [args]")
     print()
